@@ -7,13 +7,16 @@ router.get("/auxwall", (req, res) => {
 });
 router.get("/auxwall/hr_categories", hrController.getCategories);
 router.post("/auxwall/hr_categories", hrController.createCategory);
-// router.put("/hr_categories/:id", hrController.updateCategory);
-// router.delete("/hr_categories/:id", hrController.deleteCategory);
+router.put("/auxwall/hr_categories/:id", hrController.updateCategory);
+router.delete("/auxwall/hr_categories/:id", hrController.deleteCategory);
 router.get("/auxwall/hr_documents", hrController.getDocuments);
 router.get("/auxwall/hr_documents/:id", hrController.getDocument);
 router.post("/auxwall/hr_documents", hrController.createDocument);
-// router.put("/hr_documents/:id", hrController.updateDocument);
-// router.delete("/hr_documents/:id", hrController.deleteDocument);
+router.get("/auxwall/hr_dashboard", hrController.getHrDashboard);
+router.get("/auxwall/hr_dashboard/categories/summary", hrController.getSummary);
+router.get("/auxwall/hr_dashboard/expiry/near", hrController.getNearExpiryDocuments);
+router.get("/auxwall/hr_dashboard/activities/recent", hrController.getRecentActivities);
+router.get("/auxwall/hr_documents/search/categorized", hrController.getByCategory);
 
 export default router;
 

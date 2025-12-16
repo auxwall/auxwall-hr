@@ -33,7 +33,8 @@ const Activities = sequelize.define("activities", {
         field: "hr_user_id"
     },
     actionType: {
-        type: DataTypes.ENUM("Upload", "Update", "Delete", "Download", "View")
+        type: DataTypes.ENUM("Upload", "Update", "Delete", "Download", "View"),
+        field: "hr_action_type"
     },
     description: {
         type: DataTypes.TEXT,

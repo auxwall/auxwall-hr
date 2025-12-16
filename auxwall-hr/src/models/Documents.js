@@ -66,7 +66,7 @@ const Document = sequelize.define("document", {
         field: "hr_reminder_days"
     },
     status: {
-        type: DataTypes.ENUM("Active", "Inactive", "Archived"),
+        type: DataTypes.ENUM("Active", "Expired", "Archived"),
         defaultValue: "Active",
         allowNull: false,
         field: "hr_status"
