@@ -1,7 +1,23 @@
-import { Activities, Categories, Document, Staff } from "./models/index.js";
+import { Activities, Categories, Document, Staff, Company } from "./models/index.js";
 import { Op, where } from "sequelize";
 import { sequelize } from "./config/database.js";
 
+export async function createCompany(company) {
+    const newCompany = await Company.create(company);
+    return newCompany;
+}
+export async function getCompany() {
+    const company = await Company.findAll();
+    return company;
+}
+export async function createStaff(staff) {
+    const newStaff = await Staff.create(staff);
+    return newStaff;
+}
+export async function getStaff() {
+    const staff = await Staff.findAll();
+    return staff;
+}
 export async function getCategories() {
     const categories = await Categories.findAll();
     return categories;
@@ -14,15 +30,23 @@ export async function createCategory(category) {
 
 export async function updateCategory(id, category) {
     const selectedCategory = await Categories.findByPk(id);
-    selectedCategory.name = category.name;
-    selectedCategory.parent_id = category.parent_id;
-    selectedCategory.company_id = category.company_id;
-    selectedCategory.createdBy = category.createdBy;
+    if (!selectedCategory) {
+        const error = new Error(`Category with ID ${id} not found.`);
+        error.status = 404;
+        throw error;
+    }
+    selectedCategory.set(category);
     await selectedCategory.save();
     return selectedCategory;
 }
 
 export async function deleteCategory(id) {
+    const selectedCategory = await Categories.findByPk(id);
+    if (!selectedCategory) {
+        const error = new Error(`Category with ID ${id} not found.`);
+        error.status = 404;
+        throw error;
+    }
     await Categories.destroy({ where: { id: id } });
     return await Categories.findAll();
 }
@@ -34,12 +58,40 @@ export async function getDocuments() {
 
 export async function getDocument(id) {
     const document = await Document.findByPk(id);
+    if (!document) {
+        const error = new Error(`Document with ID ${id} not found.`);
+        error.status = 404;
+        throw error;
+    }
     return document;
 }
 
 export async function createDocument(document) {
     const newDocument = await Document.create(document);
     return newDocument;
+}
+
+export async function updateDocument(id, document) {
+    const selectedDocument = await Document.findByPk(id);
+    if (!selectedDocument) {
+        const error = new Error(`Document with ID ${id} not found.`);
+        error.status = 404;
+        throw error;
+    }
+    selectedDocument.set(document);
+    await selectedDocument.save();
+    return selectedDocument;
+}
+
+export async function deleteDocument(id) {
+    const selectedDocument = await Document.findByPk(id);
+    if (!selectedDocument) {
+        const error = new Error(`Document with ID ${id} not found.`);
+        error.status = 404;
+        throw error;
+    }
+    await Document.destroy({ where: { id: id } });
+    return await Document.findAll();
 }
 
 export async function getHrDashboard() {
