@@ -236,7 +236,7 @@ export async function getByCategory(categoryName, documentName, expiryStart, exp
         documentName: doc.documentName,
         expiryDate: doc.expiryDate,
         categoryName: doc.category.name,
-        staffName: doc.staff.name,
+        staffName: doc.staff?.name || 'N/A',
         createdAt: doc.created_at
     }));
 }
