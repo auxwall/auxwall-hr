@@ -20,7 +20,7 @@ const Staff = sequelize.define("staff", {
     },
     phone: {
         type: DataTypes.STRING,
-        allowNull: true
+        allowNull: false
     },
     address: {
         type: DataTypes.STRING,

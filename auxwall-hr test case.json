@@ -103,6 +103,63 @@
 			"response": []
 		},
 		{
+			"name": "Create Activities",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n        \"name\": \"Shilpa\",\r\n        \"email\": \"shilpa1234@gmail.com\",\r\n        \"phone\": \"233565775\",\r\n        \"address\": \"fsf dvd\",\r\n        \"city\": \"TVM\",\r\n        \"state\": \"Kerala\",\r\n        \"zip\": \"69953\",\r\n        \"country\": \"India\",\r\n        \"companyId\": 3,\r\n        \"designation\": \"Sofware Engineer\",\r\n        \"createdAt\": \"2025-02-12T20:00:00.000Z\"\r\n    }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseURL}}/auxwall/staffs",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"auxwall",
+						"staffs"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get All Activities",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n        \"name\": \"Shilpa\",\r\n        \"email\": \"shilpa1234@gmail.com\",\r\n        \"phone\": \"233565775\",\r\n        \"address\": \"fsf dvd\",\r\n        \"city\": \"TVM\",\r\n        \"state\": \"Kerala\",\r\n        \"zip\": \"69953\",\r\n        \"country\": \"India\",\r\n        \"companyId\": 3,\r\n        \"designation\": \"Sofware Engineer\",\r\n        \"createdAt\": \"2025-02-12T20:00:00.000Z\"\r\n    }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseURL}}/auxwall/activities",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"auxwall",
+						"activities"
+					]
+				}
+			},
+			"response": []
+		},
+		{
 			"name": "Get All Categories",
 			"request": {
 				"method": "GET",
@@ -1039,6 +1096,14 @@
 					"body": null
 				}
 			]
+		},
+		{
+			"name": "New Request",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
 		}
 	],
 	"variable": [
