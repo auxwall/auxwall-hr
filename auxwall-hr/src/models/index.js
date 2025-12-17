@@ -1,4 +1,4 @@
-import Company from "./company.js";
+import Company from "./Company.js";
 import Staff from "./Staff.js";
 import Categories from "./Categories.js";
 import Document from "./Documents.js";

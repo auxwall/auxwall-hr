@@ -12,10 +12,12 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "{{baseURL}}/auxwall/companies",
+					"raw": "http://localhost:3000/auxwall/companies",
+					"protocol": "http",
 					"host": [
-						"{{baseURL}}"
+						"localhost"
 					],
+					"port": "3000",
 					"path": [
 						"auxwall",
 						"companies"
@@ -31,7 +33,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "\r\n    {\r\n        \"name\": \"Face Of Gym\",\r\n        \"email\": \"fog_dubai@gmail.com\",\r\n        \"location\": \"Al Barsha\",\r\n        \"isActive\": true,\r\n        \"created_at\": \"2024-02-12T20:00:00.000Z\"\r\n    }",
+					"raw": "\r\n    {\r\n        \"name\": \"Face Of Gym\",\r\n        \"email\": \"fog12_dubai@gmail.com\",\r\n        \"location\": \"Al Barsha\",\r\n        \"isActive\": true,\r\n        \"created_at\": \"2024-02-12T20:00:00.000Z\"\r\n    }",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -39,10 +41,12 @@
 					}
 				},
 				"url": {
-					"raw": "{{baseURL}}/auxwall/companies",
+					"raw": "http://localhost:3000/auxwall/companies",
+					"protocol": "http",
 					"host": [
-						"{{baseURL}}"
+						"localhost"
 					],
+					"port": "3000",
 					"path": [
 						"auxwall",
 						"companies"
@@ -57,10 +61,12 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "{{baseURL}}/auxwall/staffs",
+					"raw": "http://localhost:3000/auxwall/staffs",
+					"protocol": "http",
 					"host": [
-						"{{baseURL}}"
+						"localhost"
 					],
+					"port": "3000",
 					"path": [
 						"auxwall",
 						"staffs"
@@ -76,7 +82,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n        \"name\": \"Shilpa\",\r\n        \"email\": \"shilpa123@gmail.com\",\r\n        \"phone\": \"233565775\",\r\n        \"address\": \"fsf dvd\",\r\n        \"city\": \"TVM\",\r\n        \"state\": \"Kerala\",\r\n        \"zip\": \"69953\",\r\n        \"country\": \"India\",\r\n        \"companyId\": 3,\r\n        \"designation\": \"Sofware Engineer\",\r\n        \"createdAt\": \"2025-02-12T20:00:00.000Z\"\r\n    }",
+					"raw": "{\r\n        \"name\": \"Shilpa\",\r\n        \"email\": \"shilpa1234@gmail.com\",\r\n        \"phone\": \"233565775\",\r\n        \"address\": \"fsf dvd\",\r\n        \"city\": \"TVM\",\r\n        \"state\": \"Kerala\",\r\n        \"zip\": \"69953\",\r\n        \"country\": \"India\",\r\n        \"companyId\": 3,\r\n        \"designation\": \"Sofware Engineer\",\r\n        \"createdAt\": \"2025-02-12T20:00:00.000Z\"\r\n    }",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -156,14 +162,14 @@
 					}
 				},
 				"url": {
-					"raw": "{{baseURL}}/auxwall/hr_categories/3",
+					"raw": "{{baseURL}}/auxwall/hr_categories/22",
 					"host": [
 						"{{baseURL}}"
 					],
 					"path": [
 						"auxwall",
 						"hr_categories",
-						"3"
+						"22"
 					]
 				}
 			},
@@ -184,14 +190,14 @@
 					}
 				},
 				"url": {
-					"raw": "{{baseURL}}/auxwall/hr_categories/3",
+					"raw": "{{baseURL}}/auxwall/hr_categories/22",
 					"host": [
 						"{{baseURL}}"
 					],
 					"path": [
 						"auxwall",
 						"hr_categories",
-						"3"
+						"22"
 					]
 				}
 			},
@@ -276,14 +282,14 @@
 					}
 				},
 				"url": {
-					"raw": "{{baseURL}}/auxwall/hr_documents/3",
+					"raw": "{{baseURL}}/auxwall/hr_documents/21",
 					"host": [
 						"{{baseURL}}"
 					],
 					"path": [
 						"auxwall",
 						"hr_documents",
-						"3"
+						"21"
 					]
 				}
 			},
@@ -304,14 +310,14 @@
 					}
 				},
 				"url": {
-					"raw": "{{baseURL}}/auxwall/hr_documents/3",
+					"raw": "{{baseURL}}/auxwall/hr_documents/21",
 					"host": [
 						"{{baseURL}}"
 					],
 					"path": [
 						"auxwall",
 						"hr_documents",
-						"3"
+						"21"
 					]
 				}
 			},

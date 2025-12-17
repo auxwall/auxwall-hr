@@ -1,28 +1,32 @@
 import express from "express";
-import * as hrController from "./hrContoller.js";
+import * as companyController from "./Controller/Company.js";
+import * as staffController from "./Controller/Staff.js";
+import * as categoriesController from "./Controller/Categories.js";
+import * as documentsController from "./Controller/Documents.js";
+import * as dashboardController from "./Controller/Dashboard.js";
 const router = express.Router();
 
 router.get("/auxwall", (req, res) => {
     res.send("Company API running...!");
 });
-router.get("/auxwall/companies", hrController.getCompany);
-router.post("/auxwall/companies", hrController.createCompany);
-router.post("/auxwall/staffs", hrController.createStaff);
-router.get("/auxwall/staffs", hrController.getStaff);
-router.get("/auxwall/hr_categories", hrController.getCategories);
-router.post("/auxwall/hr_categories", hrController.createCategory);
-router.put("/auxwall/hr_categories/:id", hrController.updateCategory);
-router.delete("/auxwall/hr_categories/:id", hrController.deleteCategory);
-router.get("/auxwall/hr_documents", hrController.getDocuments);
-router.get("/auxwall/hr_documents/:id", hrController.getDocument);
-router.post("/auxwall/hr_documents", hrController.createDocument);
-router.put("/auxwall/hr_documents/:id", hrController.updateDocument);
-router.delete("/auxwall/hr_documents/:id", hrController.deleteDocument);
-router.get("/auxwall/hr_dashboard", hrController.getHrDashboard);
-router.get("/auxwall/hr_dashboard/categories/summary", hrController.getSummary);
-router.get("/auxwall/hr_dashboard/expiry/near", hrController.getNearExpiryDocuments);
-router.get("/auxwall/hr_dashboard/activities/recent", hrController.getRecentActivities);
-router.get("/auxwall/hr_documents/search/categorized", hrController.getByCategory);
+router.get("/auxwall/companies", companyController.getCompany);
+router.post("/auxwall/companies", companyController.createCompany);
+router.post("/auxwall/staffs", staffController.createStaff);
+router.get("/auxwall/staffs", staffController.getStaff);
+router.get("/auxwall/hr_categories", categoriesController.getCategories);
+router.post("/auxwall/hr_categories", categoriesController.createCategory);
+router.put("/auxwall/hr_categories/:id", categoriesController.updateCategory);
+router.delete("/auxwall/hr_categories/:id", categoriesController.deleteCategory);
+router.get("/auxwall/hr_documents", documentsController.getDocuments);
+router.get("/auxwall/hr_documents/:id", documentsController.getDocument);
+router.post("/auxwall/hr_documents", documentsController.createDocument);
+router.put("/auxwall/hr_documents/:id", documentsController.updateDocument);
+router.delete("/auxwall/hr_documents/:id", documentsController.deleteDocument);
+router.get("/auxwall/hr_dashboard", dashboardController.getHrDashboard);
+router.get("/auxwall/hr_dashboard/categories/summary", dashboardController.getSummary);
+router.get("/auxwall/hr_dashboard/expiry/near", dashboardController.getNearExpiryDocuments);
+router.get("/auxwall/hr_dashboard/activities/recent", dashboardController.getRecentActivities);
+router.get("/auxwall/hr_documents/search/categorized", dashboardController.getByCategory);
 
 export default router;
 
