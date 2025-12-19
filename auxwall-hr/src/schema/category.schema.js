@@ -34,3 +34,8 @@ export const categoryIdSchema = Joi.object({
             'number.positive': 'The ID must be a valid positive integer'
         })
 });
+
+export const updateCategorySchema = categoryBodySchema.fork(
+    ['name', 'company_id', 'parent_id', 'createdBy'],
+    (schema) => schema.optional()
+);

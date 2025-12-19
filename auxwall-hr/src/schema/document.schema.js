@@ -3,22 +3,15 @@ import Joi from "joi";
 export const documentBodySchema = Joi.object({
     companyId: Joi.number().required(),
     categoryId: Joi.number().required(),
-    documentName: Joi.string()
-        .min(2)
-        .required(),
-    filePath: Joi.string().required(),
-    fileSize: Joi.number().required(),
-    mimeType: Joi.string().required(),
-    staffId: Joi.number().required(),
+    staffId: Joi.number().optional().allow(null),
+    uploadedBy: Joi.number().required(),
+    expiryDate: Joi.date().greater('now').required(),
     reminderDays: Joi.date().required(),
     status: Joi.string()
         .valid("Active", "Expired", "Archived")
-        .required(),
-    uploadedBy: Joi.number().required(),
-    expiryDate: Joi.date().greater('now').required(),
-    created_at: Joi.date().default(Date.now()),
-    updated_at: Joi.date().default(Date.now()),
-})
+        .default("Active"),
+    myFile: Joi.any().optional()
+});
 
 export const documentIdSchema = Joi.object({
     id: Joi.number()
@@ -32,3 +25,8 @@ export const documentIdSchema = Joi.object({
             'any.required': 'Document "id" is required'
         })
 })
+
+export const updateDocumentSchema = documentBodySchema.fork(
+    ['companyId', 'categoryId', 'uploadedBy', 'expiryDate', 'reminderDays', 'myFile'],
+    (schema) => schema.optional()
+);

@@ -1,0 +1,10 @@
+import Joi from "joi";
+
+export const categorizedSearchSchema = Joi.object({
+    category: Joi.string().allow(null).allow(''),
+    name: Joi.string().allow(null).allow(''),
+    expiry_start: Joi.date().allow(null).allow(''),
+    expiry_end: Joi.date().allow(null).allow(''),
+    page: Joi.number().default(1),
+    size: Joi.number().default(10)
+});

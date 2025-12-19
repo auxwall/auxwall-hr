@@ -27,9 +27,40 @@ app.use(router);
         await Activities.sync({ alter: true });
         console.log("Activities model synchronized.");
 
-        app.listen(Port, () =>
-            console.log(`Server running on port ${Port}`));
+        // Explicitly create server using http module
+        // This ensures tracking of the server handle
+        const server = app.listen(Port, () => {
+            console.log(`Server running on port ${Port}`);
+        });
+
+        server.on('error', (e) => {
+            console.error('[DEBUG] Server Error:', e);
+            process.exit(1);
+        });
+
+        // Debugging: check if server is listening
+        console.log("Server instance created.");
+
+        // DEBUG: Keep process alive and log exits
+        setInterval(() => {
+            console.log("Heartbeat: Server is still alive...");
+        }, 5000); // Kept ref'd to prove if event loop is draining
+
+        process.on('exit', (code) => {
+            console.log(`[DEBUG] Process is exiting with code: ${code}`);
+        });
+
+        process.on('unhandledRejection', (reason, promise) => {
+            console.error('[DEBUG] Unhandled Rejection at:', promise, 'reason:', reason);
+        });
+
+        process.on('uncaughtException', (error) => {
+            console.error('[DEBUG] Uncaught Exception:', error);
+        });
+
     } catch (err) {
         console.log(err);
     }
-})(); // The error was that the immediately invoked async function expression (IIFE) was not being invoked.()
+})();
+
+// Remove process exit debugging for now to see clean behavior
