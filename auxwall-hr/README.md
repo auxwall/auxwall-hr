@@ -18,7 +18,7 @@ To integrate this into your main "Old Project," follow these steps:
 This module is designed to share your existing database connection. This prevents multiple connection pools and keeps data consistent.
 
 ```javascript
-import { useSharedDatabase, syncHRModels } from 'auxwall-hr';
+import { useSharedDatabase, syncHRModels } from 'auxwall-hr-module';
 import { yourSequelizeInstance } from './path-to-your-db.js';
 
 // 1. Pass your existing connection to the module
@@ -33,7 +33,7 @@ Mount the HR routes into your main Express application.
 
 ```javascript
 import express from 'express';
-import { hrRouter } from 'auxwall-hr';
+import { hrRouter } from 'auxwall-hr-module';
 
 const app = express();
 
