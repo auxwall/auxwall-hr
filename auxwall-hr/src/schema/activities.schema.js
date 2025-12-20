@@ -13,7 +13,7 @@ export const activitiesBodySchema = Joi.object({
     description: Joi.string()
         .allow(null)
         .allow(''),
-    created_at: Joi.date().default(Date.now())
+    created_at: Joi.date().default(Date.now()).optional()
 })
 
 export const activitiesIdSchema = Joi.object({

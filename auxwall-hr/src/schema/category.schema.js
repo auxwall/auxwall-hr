@@ -22,7 +22,7 @@ export const categoryBodySchema = Joi.object({
 
     createdBy: Joi.number()
         .integer()
-        .required()
+        .optional()
 });
 export const categoryIdSchema = Joi.object({
     id: Joi.number()

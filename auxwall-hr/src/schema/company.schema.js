@@ -15,7 +15,7 @@ export const companyBodySchema = Joi.object({
     location: Joi.string()
         .required(),
     isActive: Joi.boolean().default(true),
-    created_at: Joi.date().default(Date.now()),
-    updated_at: Joi.date().default(Date.now()),
+    created_at: Joi.date().default(Date.now()).optional(),
+    updated_at: Joi.date().default(Date.now()).optional(),
 
 })
