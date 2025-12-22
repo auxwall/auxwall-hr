@@ -1,27 +1,51 @@
-// src/index.js
-import router from "./router.js";
-// Import both the sequelize instance AND the helper function
-import { sequelize, useSharedDatabase } from "./config/database.js";
-import { Company, Staff, Categories, Document, Activities } from "./models/index.js";
-import "./models/association.js";
+import { initModels } from "./models/index.js";
+import { setupRoutes } from "./router.js";
+import fs from 'fs';
 
 /**
- * Utility to sync only HR-specific tables. 
+ * @param {Object} options
+ * @param {Object} options.app
+ * @param {Object} options.sequelize
+ * @param {Object} options.models
+ * @param {String} options.uploadPath 
+ * @param {String} [options.path] 
+ * @param {Boolean} [options.autoSync]
  */
-export const syncHRModels = async (options = { alter: true }) => {
-    await Categories.sync(options);
-    await Document.sync(options);
-    await Activities.sync(options);
-    console.log("HR Module tables synchronized.");
-};
+export const initializeHRModule = async ({
+    app,
+    sequelize,
+    models,
+    uploadPath,
+    path = '/api/hr',
+    autoSync = false
+}) => {
+    try {
+        if (!uploadPath) {
+            throw new Error("Initialization Failed: 'uploadPath' must be provided to the HR Module for document storage.");
+        }
 
-export {
-    router as hrRouter,
-    sequelize as hrSequelize,
-    useSharedDatabase,
-    Company,
-    Staff,
-    Categories,
-    Document,
-    Activities
+        if (!fs.existsSync(uploadPath)) {
+            fs.mkdirSync(uploadPath, { recursive: true });
+            console.log(`Created storage directory at: ${uploadPath}`);
+        }
+
+        const hrModels = initModels(sequelize, models);
+
+        if (autoSync) {
+            await hrModels.Category.sync({ alter: true });
+            await hrModels.Document.sync({ alter: true });
+            await hrModels.Activity.sync({ alter: true });
+            console.log("HR Module tables synced.");
+        }
+
+        const hrRouter = setupRoutes(hrModels, uploadPath);
+        app.use(path, hrRouter);
+
+        console.log(`Auxwall HR Module mounted on ${path}`);
+
+        return { hrModels, hrRouter };
+    } catch (error) {
+        console.error("HR Module failed to initialize:", error);
+        throw error;
+    }
 };

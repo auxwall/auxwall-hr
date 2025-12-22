@@ -1,7 +1,5 @@
-import { Activities } from "../../models/index.js";
-
-export async function getRecentActivities() {
-    const recentActivities = await Activities.findAll(
+export async function getRecentActivities(activityModels) {
+    const recentActivities = await activityModels.findAll(
         {
             limit: 15,
             order: [['createdAt', 'DESC']],

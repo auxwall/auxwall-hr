@@ -1,9 +1,9 @@
 import { Op } from "sequelize";
-import { Activities, Categories, Document, Staff } from "../../models/index.js";
 
-export async function getHrDashboard() {
+export async function getHrDashboard(hrModels) {
+    const { Staff, Category, Document, Activity } = hrModels;
     const totalEmployees = await Staff.count();
-    const totalCategories = await Categories.count();
+    const totalCategories = await Category.count();
     const totalDocuments = await Document.count();
     const expiredDocuments = await Document.count({ where: { hr_status: "Expired" } });
     const today = new Date();
@@ -19,7 +19,7 @@ export async function getHrDashboard() {
             }
         }
     });
-    const recentActivities = await Activities.findAll(
+    const recentActivities = await Activity.findAll(
         {
             limit: 5,
             order: [['createdAt', 'DESC']],

@@ -1,8 +1,6 @@
-import { Activities } from "../../models/index.js";
-
-export async function getActivities(limit, offset) {
+export async function getActivities(limit, offset, ActivityModel) {
     try {
-        const activities = await Activities.findAndCountAll({
+        const activities = await ActivityModel.findAndCountAll({
             limit,
             offset,
             order: [

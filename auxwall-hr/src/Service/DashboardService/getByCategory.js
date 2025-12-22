@@ -1,8 +1,8 @@
 import { Op } from "sequelize";
-import { Document, Categories, Staff } from "../../models/index.js";
 
+export async function getByCategory(categoryName, documentName, expiryStart, expiryEnd, limit, offset, hrModels) {
 
-export async function getByCategory(categoryName, documentName, expiryStart, expiryEnd, limit, offset) {
+    const { Document, Category, Staff } = hrModels;
 
     const documentWhere = {};
     const categoryWhere = {};
@@ -35,14 +35,14 @@ export async function getByCategory(categoryName, documentName, expiryStart, exp
         offset,
         where: documentWhere,
         include: [{
-            model: Categories,
+            model: Category,
             as: 'category',
             where: categoryWhere,
             required: Object.keys(categoryWhere).length > 0
         },
         {
             model: Staff,
-            as: 'staff'
+            as: 'assignedStaff'
         }],
         order: [['created_at', 'DESC']]
     });
@@ -51,7 +51,7 @@ export async function getByCategory(categoryName, documentName, expiryStart, exp
         documentName: doc.documentName,
         expiryDate: doc.expiryDate,
         categoryName: doc.category.name,
-        staffName: doc.staff?.name || 'N/A',
+        staffName: doc.assignedStaff?.name || 'N/A',
         createdAt: doc.created_at
     }));
 

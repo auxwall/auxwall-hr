@@ -1,7 +1,5 @@
-import { Document } from "../../models/index.js";
-
-export async function getDocument(id) {
-    const document = await Document.findByPk(id);
+export async function getDocument(id, DocumentModel) {
+    const document = await DocumentModel.findByPk(id);
     if (!document) {
         const error = new Error(`Document with ID ${id} not found.`);
         error.status = 404;

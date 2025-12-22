@@ -1,7 +1,5 @@
-import { Categories } from "../../models/index.js";
-
-export async function getCategories(limit, offset) {
-    const categories = await Categories.findAndCountAll({
+export async function getCategories(limit, offset, CategoryModel) {
+    const categories = await CategoryModel.findAndCountAll({
         limit,
         offset,
         order: [

@@ -1,6 +1,4 @@
-import { Company } from "../../models/index.js";
-
-export async function createCompany(company) {
-    const newCompany = await Company.create(company);
+export async function createCompany(company, hrModels) {
+    const newCompany = await hrModels.Company.create(company);
     return newCompany;
 }

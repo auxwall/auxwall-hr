@@ -12,11 +12,11 @@ export const categoryBodySchema = Joi.object({
             'any.required': 'Category "name" is required'
         }),
 
-    company_id: Joi.number()
+    companyId: Joi.number()
         .integer()
         .required(),
 
-    parent_id: Joi.number()
+    parentId: Joi.number()
         .integer()
         .allow(null),
 
@@ -36,6 +36,6 @@ export const categoryIdSchema = Joi.object({
 });
 
 export const updateCategorySchema = categoryBodySchema.fork(
-    ['name', 'company_id', 'parent_id', 'createdBy'],
+    ['name', 'companyId', 'parentId', 'createdBy'],
     (schema) => schema.optional()
 );

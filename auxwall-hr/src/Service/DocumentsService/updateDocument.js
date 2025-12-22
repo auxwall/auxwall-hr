@@ -1,8 +1,7 @@
-import { Document } from "../../models/index.js";
 import fs from "fs";
 
-export async function updateDocument(id, document, file) {
-    const selectedDocument = await Document.findByPk(id);
+export async function updateDocument(id, document, file, DocumentModel) {
+    const selectedDocument = await DocumentModel.findByPk(id);
     if (!selectedDocument) {
         const error = new Error(`Document with ID ${id} not found.`);
         error.status = 404;

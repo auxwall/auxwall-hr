@@ -1,7 +1,5 @@
-import { Categories } from "../../models/index.js";
-
-export async function updateCategory(id, category) {
-    const selectedCategory = await Categories.findByPk(id);
+export async function updateCategory(id, category, CategoryModel) {
+    const selectedCategory = await CategoryModel.findByPk(id);
     if (!selectedCategory) {
         const error = new Error(`Category with ID ${id} not found.`);
         error.status = 404;

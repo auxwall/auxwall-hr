@@ -1,11 +1,9 @@
-import { Staff } from "../../models/index.js";
-
-export async function getStaff(limit, offset) {
-    const staff = await Staff.findAndCountAll({
+export async function getStaff(limit, offset, hrModels) {
+    const staff = await hrModels.Staff.findAndCountAll({
         limit,
         offset,
         order: [
-            ['id', 'DESC']
+            ['staffId', 'DESC']
         ]
     });
     return staff;

@@ -1,6 +1,6 @@
 import * as documentService from "../../Service/DocumentsService/createDocument.js";
 
-export const createDocument = async (req, res) => {
+export const createDocument = async (req, res, hrModels) => {
     try {
         if (!req.file) {
             return res.status(400).json({ error: "File is missing in request." });
@@ -14,7 +14,7 @@ export const createDocument = async (req, res) => {
             mimeType: req.file.mimetype
         };
 
-        const savedDoc = await documentService.createDocument(documentData);
+        const savedDoc = await documentService.createDocument(documentData, hrModels.Document);
 
         return res.status(201).json({
             success: true,

@@ -1,6 +1,4 @@
-import { Staff } from "../../models/index.js";
-
-export async function createStaff(staff) {
-    const newStaff = await Staff.create(staff);
+export async function createStaff(staff, hrModels) {
+    const newStaff = await hrModels.Staff.create(staff);
     return newStaff;
 }

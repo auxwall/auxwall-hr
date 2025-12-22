@@ -1,6 +1,4 @@
-import { Categories } from "../../models/index.js";
-
-export async function createCategory(category) {
-    const newCategory = await Categories.create(category);
+export async function createCategory(category, CategoryModel) {
+    const newCategory = await CategoryModel.create(category);
     return newCategory;
 }

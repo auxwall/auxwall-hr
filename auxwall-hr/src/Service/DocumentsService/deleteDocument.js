@@ -1,8 +1,7 @@
-import { Document } from "../../models/index.js";
 import fs from "fs";
 
-export async function deleteDocument(id) {
-    const selectedDocument = await Document.findByPk(id);
+export async function deleteDocument(id, DocumentModel) {
+    const selectedDocument = await DocumentModel.findByPk(id);
     if (!selectedDocument) {
         const error = new Error(`Document with ID ${id} not found.`);
         error.status = 404;
@@ -15,6 +14,6 @@ export async function deleteDocument(id) {
     else {
         console.log("File not found");
     }
-    await Document.destroy({ where: { id: id } });
-    return await Document.findAll();
+    await DocumentModel.destroy({ where: { id: id } });
+    return await DocumentModel.findAll();
 }

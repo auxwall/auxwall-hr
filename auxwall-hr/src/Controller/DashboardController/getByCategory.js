@@ -1,7 +1,7 @@
 import { getPagination, getPaginationResponse } from "../../utils/pagination.js";
 import * as dashboardService from "../../Service/DashboardService/getByCategory.js";
 
-export const getByCategory = async function (req, res) {
+export const getByCategory = async function (req, res, hrModels) {
     try {
         const {
             category,
@@ -19,7 +19,8 @@ export const getByCategory = async function (req, res) {
             expiry_start,
             expiry_end,
             limit,
-            offset
+            offset,
+            hrModels
         );
 
         res.status(200).json({

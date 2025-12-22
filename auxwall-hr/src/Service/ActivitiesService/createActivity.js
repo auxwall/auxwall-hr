@@ -1,8 +1,6 @@
-import { Activities } from "../../models/index.js";
-
-export async function createActivity(activity) {
+export async function createActivity(activity, ActivityModel) {
     try {
-        const newActivity = await Activities.create(activity);
+        const newActivity = await ActivityModel.create(activity);
         return newActivity;
     } catch (error) {
         return error;

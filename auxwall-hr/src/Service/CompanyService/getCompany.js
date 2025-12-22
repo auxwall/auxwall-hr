@@ -1,11 +1,9 @@
-import { Company } from "../../models/index.js";
-
-export async function getCompany(limit, offset) {
-    const company = await Company.findAndCountAll({
+export async function getCompany(limit, offset, hrModels) {
+    const company = await hrModels.Company.findAndCountAll({
         limit,
         offset,
         order: [
-            ['id', 'DESC']
+            ['companyId', 'DESC']
         ]
     });
     return company;

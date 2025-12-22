@@ -1,7 +1,5 @@
-import { Document } from "../../models/index.js";
-
-export const createDocument = async (documentData) => {
-    const newDocument = await Document.create({
+export const createDocument = async (documentData, DocumentModel) => {
+    const newDocument = await DocumentModel.create({
         companyId: documentData.companyId,
         categoryId: documentData.categoryId,
         documentName: documentData.originalName,

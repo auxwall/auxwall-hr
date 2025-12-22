@@ -1,10 +1,10 @@
-import { sequelize } from "../../config/database.js";
-import { Categories, Document } from "../../models/index.js";
 
-export async function getSummary() {
-    const totalCategories = await Categories.count();
 
-    const documentsPerCategory = await Document.findAll({
+export async function getSummary(hrModels) {
+    const sequelize = hrModels.Document.sequelize;
+    const totalCategories = await hrModels.Category.count();
+
+    const documentsPerCategory = await hrModels.Document.findAll({
         attributes: [
             [sequelize.literal('"hr_category_Id"'), 'categoryId'],
             [sequelize.fn('COUNT', sequelize.col('id')), 'documentCount']

@@ -1,12 +1,10 @@
-import { Categories } from "../../models/index.js";
-
-export async function deleteCategory(id) {
-    const selectedCategory = await Categories.findByPk(id);
+export async function deleteCategory(id, CategoryModel) {
+    const selectedCategory = await CategoryModel.findByPk(id);
     if (!selectedCategory) {
         const error = new Error(`Category with ID ${id} not found.`);
         error.status = 404;
         throw error;
     }
-    await Categories.destroy({ where: { id: id } });
-    return await Categories.findAll();
+    await CategoryModel.destroy({ where: { id: id } });
+    return await CategoryModel.findAll();
 }
