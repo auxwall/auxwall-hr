@@ -1,6 +1,6 @@
 import { Op } from "sequelize";
 
-export async function getByCategory(categoryName, documentName, expiryStart, expiryEnd, limit, offset, hrModels) {
+export async function getByCategory(categoryId, categoryName, documentName, expiryStart, expiryEnd, limit, offset, hrModels) {
 
     const { Document, Category, Staff } = hrModels;
 
@@ -22,6 +22,10 @@ export async function getByCategory(categoryName, documentName, expiryStart, exp
         if (expiryEnd) {
             documentWhere.expiryDate[Op.lte] = expiryEnd;
         }
+    }
+
+    if (categoryId) {
+        categoryWhere.id = categoryId;
     }
 
     if (categoryName) {

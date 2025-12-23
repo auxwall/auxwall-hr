@@ -19,6 +19,25 @@ export async function getHrDashboard(hrModels) {
             }
         }
     });
+    const expiring = await Document.findAll({
+        where: {
+            hr_status: "Active",
+            hr_expiry_date: {
+                [Op.gt]: today,
+                [Op.lte]: fifteenDaysLater
+            }
+        },
+        include: [
+            {
+                model: Staff,
+                as: "assignedStaff",
+                attributes: ["name"]
+            }
+        ],
+        limit: 5,
+        attributes: ["hr_document_name", "hr_expiry_date", "hr_status"],
+        order: [['hr_expiry_date', 'ASC']],
+    });
     const recentActivities = await Activity.findAll(
         {
             limit: 5,
@@ -27,25 +46,18 @@ export async function getHrDashboard(hrModels) {
         }
     )
 
-    const alerts = {
-        expiredDocuments,
-        expiringSoon,
-    };
-
     return {
-        employees: {
+        stats: {
             totalEmployees,
-        },
-        categories: {
             totalCategories,
+            totalDocuments,
         },
         documents: {
             totalDocuments,
             expiredDocuments,
-            expiringSoon,
+            expiringSoonCount: expiringSoon,
         },
         activities: recentActivities,
-        alerts,
-
+        expiringDetails: expiring
     };
 };

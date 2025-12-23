@@ -31,12 +31,10 @@ import { getByCategory } from "./Controller/DashboardController/getByCategory.js
 
 export const setupRoutes = (hrModels, uploadPath) => {
     const router = express.Router();
-
     const upload = createUploadMiddleware(uploadPath);
 
-    // Helper to inject models into controller calls
-    // This allows controllers to use the specific instances created by the dev's DB
     const injectModels = (controller) => (req, res) => controller(req, res, hrModels);
+    const injectContext = (controller) => (req, res) => controller(req, res, hrModels, uploadPath);
 
     router.get("/", (req, res) => {
         res.send("Auxwall HR Module API running...!");
@@ -61,9 +59,9 @@ export const setupRoutes = (hrModels, uploadPath) => {
     //Documents
     router.get("/hr_documents", validate(paginationQuerySchema), injectModels(getDocuments));
     router.get("/hr_documents/:id", validate(documentIdSchema, 'params'), injectModels(getDocument));
-    router.post("/hr_documents", upload.single("myFile"), validate(documentBodySchema), injectModels(createDocument));
-    router.put("/hr_documents/:id", upload.single("myFile"), validate(documentIdSchema, 'params'), validate(updateDocumentSchema), injectModels(updateDocument));
-    router.delete("/hr_documents/:id", validate(documentIdSchema, 'params'), injectModels(deleteDocument));
+    router.post("/hr_documents", upload.single("myFile"), validate(documentBodySchema), injectContext(createDocument));
+    router.put("/hr_documents/:id", upload.single("myFile"), validate(documentIdSchema, 'params'), validate(updateDocumentSchema), injectContext(updateDocument));
+    router.delete("/hr_documents/:id", validate(documentIdSchema, 'params'), injectContext(deleteDocument));
 
     //Dashboard
     router.get("/hr_dashboard", injectModels(getHrDashboard));

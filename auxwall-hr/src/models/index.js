@@ -17,6 +17,7 @@ export const initModels = (sequelize, userModels) => {
     Document.belongsTo(Category, { foreignKey: "hr_category_Id", as: "category" });
     Document.belongsTo(Staff, { foreignKey: "hr_staff_id", as: "assignedStaff" });
     Document.belongsTo(Staff, { foreignKey: "hr_uploaded_by_id", as: "uploader" });
+    Document.hasMany(Activity, { foreignKey: 'docId', onDelete: 'SET NULL' });
 
     //Staff
     Staff.hasMany(Document, { foreignKey: "hr_staff_id", as: "staffDocuments" });

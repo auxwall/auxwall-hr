@@ -9,15 +9,15 @@ export const defineActivity = (sequelize) => {
         },
         companyId: {
             type: DataTypes.INTEGER,
-            allowNull: false
+            allowNull: true
         },
         docId: {
             type: DataTypes.INTEGER,
-            allowNull: false
+            allowNull: true
         },
         userId: {
             type: DataTypes.INTEGER,
-            allowNull: false,
+            allowNull: true,
             field: "hr_user_id"
         },
         actionType: {
@@ -31,7 +31,7 @@ export const defineActivity = (sequelize) => {
         },
         createdAt: {
             type: DataTypes.DATE,
-            allowNull: false
+            allowNull: true
         }
     },
         { tableName: "hr_activities" })

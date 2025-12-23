@@ -4,6 +4,7 @@ import * as dashboardService from "../../Service/DashboardService/getByCategory.
 export const getByCategory = async function (req, res, hrModels) {
     try {
         const {
+            categoryId,
             category,
             name,
             expiry_start,
@@ -14,6 +15,7 @@ export const getByCategory = async function (req, res, hrModels) {
         const { limit, offset } = getPagination(page, size);
 
         const result = await dashboardService.getByCategory(
+            categoryId,
             category,
             name,
             expiry_start,

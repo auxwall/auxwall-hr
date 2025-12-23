@@ -9,8 +9,7 @@ export async function getSummary(hrModels) {
             [sequelize.literal('"hr_category_Id"'), 'categoryId'],
             [sequelize.fn('COUNT', sequelize.col('id')), 'documentCount']
         ],
-        group: [sequelize.literal('"hr_category_Id"')],
-        raw: true
+        group: [sequelize.literal('"hr_category_Id"')]
     });
 
     return {
