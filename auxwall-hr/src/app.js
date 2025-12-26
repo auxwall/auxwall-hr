@@ -1,5 +1,5 @@
 import express from 'express';
-import { Sequelize, DataTypes } from 'sequelize';
+import { Sequelize, DataTypes, TIME } from 'sequelize';
 import path from 'path';
 import { initializeHRModule } from './index.js';
 
@@ -48,17 +48,52 @@ const Staff = sequelize.define('staff', {
     }
 }, { tableName: 'staffs', timestamps: false });
 
+const Punching = sequelize.define("punching", {
+    id: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        autoIncrement: true
+    },
+    staffId: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        field: "staff_id"
+    },
+    punchingDate: {
+        type: DataTypes.DATE,
+        defaultValue: () => new Date(),
+        allowNull: true,
+        field: "punching_date"
+    },
+    punchingTime: {
+        type: DataTypes.TIME,
+        defaultValue: () => new Date().getHours() + ":" + new Date().getMinutes() + ":" + new Date().getSeconds(),
+        allowNull: true,
+        field: "punching_time"
+    },
+    punchingType: {
+        type: DataTypes.ENUM("In", "Out"),
+        allowNull: false,
+        field: "punching_type"
+    }
+}, {
+    tableName: "punching"
+});
+
+
+
 const startHRModule = async () => {
     try {
         await Company.sync({ alter: true });
         await Staff.sync({ alter: true });
+        await Punching.sync({ alter: true });
 
         console.log("✅ Host tables (Company & Staff) synced.");
 
         await initializeHRModule({
             app,
             sequelize,
-            models: { Company, Staff },
+            models: { Company, Staff, Punching },
             uploadPath: path.resolve('./uploads/hr_documents'),
             path: '/api/hr',
             autoSync: true // In Postgres, this will create tables in your public schema

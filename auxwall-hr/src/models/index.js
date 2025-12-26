@@ -1,14 +1,18 @@
 import { defineDocument } from "./Documents.js";
 import { defineCategory } from "./Categories.js";
 import { defineActivity } from "./Activities.js";
+import { defineStaffShift } from "./StaffShifts.js";
+import { defineAttendenceSummary } from "./AttendenceSummary.js";
 
 export const initModels = (sequelize, userModels) => {
-    const { Staff, Company } = userModels;
+    const { Staff, Company, Punching } = userModels;
 
     // 1. Initialize Functional Models
     const Document = defineDocument(sequelize);
     const Category = defineCategory(sequelize);
     const Activity = defineActivity(sequelize);
+    const StaffShift = defineStaffShift(sequelize);
+    const AttendenceSummary = defineAttendenceSummary(sequelize);
 
     // 2. Setup Foreign Key Associations
 
@@ -33,5 +37,11 @@ export const initModels = (sequelize, userModels) => {
     Activity.belongsTo(Document, { foreignKey: "docId", as: "relatedDoc" });
     Activity.belongsTo(Staff, { foreignKey: "userId", as: "actor" });
 
-    return { Document, Category, Activity, Staff, Company };
+    // --- StaffShift Links ---
+    StaffShift.belongsTo(Staff, { foreignKey: "staffId", as: "staff" });
+
+    // --- AttendenceSummary Links ---
+    AttendenceSummary.belongsTo(Staff, { foreignKey: "staffId", as: "staff" });
+
+    return { Document, Category, Activity, Staff, Company, StaffShift, AttendenceSummary, Punching };
 };

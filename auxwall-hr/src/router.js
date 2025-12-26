@@ -3,31 +3,47 @@ import { validate } from "./middleware/validate.js";
 import { createUploadMiddleware } from "./middleware/upload.js";
 
 import { categoryBodySchema, categoryIdSchema, updateCategorySchema } from "./schema/category.schema.js";
+import { documentBodySchema, documentIdSchema, updateDocumentSchema } from "./schema/document.schema.js";
+import { shiftBodySchema, shiftIdSchema, updateShiftSchema } from "./schema/shift.schema.js";
+import { categorizedSearchSchema } from "./schema/categorizedSearch.schema.js";
 import { activitiesBodySchema } from "./schema/activities.schema.js";
 import { paginationQuerySchema } from "./schema/pagination.schema.js";
-import { documentBodySchema, documentIdSchema, updateDocumentSchema } from "./schema/document.schema.js";
-import { categorizedSearchSchema } from "./schema/categorizedSearch.schema.js";
 
 import { getCompany } from "./Controller/CompanyController/getCompany.js";
 import { createCompany } from "./Controller/CompanyController/createCompany.js";
+
 import { getStaff } from "./Controller/StaffController/getStaff.js";
 import { createStaff } from "./Controller/StaffController/createStaff.js";
+
 import { createActivity } from "./Controller/ActivitiesController/createActivity.js";
 import { getActivities } from "./Controller/ActivitiesController/getActivities.js";
+
 import { getCategories } from "./Controller/CategoriesController/getCategories.js";
 import { createCategory } from "./Controller/CategoriesController/createCategory.js";
 import { updateCategory } from "./Controller/CategoriesController/updateCategory.js";
 import { deleteCategory } from "./Controller/CategoriesController/deleteCategory.js";
+
 import { getDocuments } from "./Controller/DocumentsController/getDocuments.js";
 import { getDocument } from "./Controller/DocumentsController/getDocument.js";
 import { createDocument } from "./Controller/DocumentsController/createDocument.js";
 import { updateDocument } from "./Controller/DocumentsController/updateDocument.js";
 import { deleteDocument } from "./Controller/DocumentsController/deleteDocument.js";
+
 import { getHrDashboard } from "./Controller/DashboardController/getHrDashboard.js";
 import { getSummary } from "./Controller/DashboardController/getSummary.js";
 import { getNearExpiryDocuments } from "./Controller/DashboardController/getNearExpiryDocuments.js";
 import { getRecentActivities } from "./Controller/DashboardController/getRecentActivities.js";
 import { getByCategory } from "./Controller/DashboardController/getByCategory.js";
+
+import { getPunchingDetails } from "./Controller/StaffAttendenceController/PunchingController/getPunchingDetails.js";
+import { markPunches } from "./Controller/StaffAttendenceController/PunchingController/markPunches.js";
+
+import { createShift } from "./Controller/StaffAttendenceController/StaffShiftsController/createShift.js";
+import { viewShifts } from "./Controller/StaffAttendenceController/StaffShiftsController/viewShifts.js";
+import { editShift } from "./Controller/StaffAttendenceController/StaffShiftsController/editShift.js";
+import { deleteShift } from "./Controller/StaffAttendenceController/StaffShiftsController/deleteShift.js";
+
+import { viewAttendenceSummary } from "./Controller/StaffAttendenceController/AttendenceSummary/viewAttendenceSummary.js";
 
 export const setupRoutes = (hrModels, uploadPath) => {
     const router = express.Router();
@@ -70,6 +86,18 @@ export const setupRoutes = (hrModels, uploadPath) => {
     router.get("/hr_dashboard/activities/recent", injectModels(getRecentActivities));
     router.get("/hr_documents/search/categorized", validate(categorizedSearchSchema, 'query'), injectModels(getByCategory));
 
+    //Staff Attendence
+    router.post("/staff_attendence", injectModels(markPunches));
+    router.get("/staff_attendence", validate(paginationQuerySchema), injectModels(getPunchingDetails));
+
+    //Staff Shifts
+    router.post("/staff_shifts", validate(shiftBodySchema), injectModels(createShift));
+    router.get("/staff_shifts", validate(paginationQuerySchema), injectModels(viewShifts));
+    router.put("/staff_shifts/:id", validate(shiftIdSchema, 'params'), validate(updateShiftSchema), injectModels(editShift));
+    router.delete("/staff_shifts/:id", validate(shiftIdSchema, 'params'), injectModels(deleteShift));
+
+    //Attendence Summary
+    router.get("/staff_attendence_summary", validate(paginationQuerySchema), injectModels(viewAttendenceSummary));
     return router;
 
 }

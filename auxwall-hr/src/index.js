@@ -1,5 +1,6 @@
 import { initModels } from "./models/index.js";
 import { setupRoutes } from "./router.js";
+import { updateAttendanceSummary } from "./utils/attendenceLogic.js";
 import fs from 'fs';
 
 /**
@@ -35,8 +36,24 @@ export const initializeHRModule = async ({
             await hrModels.Category.sync({ alter: true });
             await hrModels.Document.sync({ alter: true });
             await hrModels.Activity.sync({ alter: true });
+            await hrModels.StaffShift.sync({ alter: true });
+            await hrModels.AttendenceSummary.sync({ alter: true });
             console.log("HR Module tables synced.");
         }
+
+        models.Punching.addHook('afterCreate', 'autoUpdateAttendance', async (punch) => {
+            try {
+                await updateAttendanceSummary(punch, {
+                    StaffShift: hrModels.StaffShift,
+                    AttendenceSummary: hrModels.AttendenceSummary,
+                    Punching: hrModels.Punching
+                });
+            } catch (error) {
+                console.error("Attendance Automation Error:", error);
+            }
+        });
+
+        console.log("HR Module initialized with automatic attendance tracking.");
 
         const hrRouter = setupRoutes(hrModels, uploadPath);
         app.use(path, hrRouter);
