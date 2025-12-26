@@ -44,6 +44,7 @@ import { editShift } from "./Controller/StaffAttendenceController/StaffShiftsCon
 import { deleteShift } from "./Controller/StaffAttendenceController/StaffShiftsController/deleteShift.js";
 
 import { viewAttendenceSummary } from "./Controller/StaffAttendenceController/AttendenceSummary/viewAttendenceSummary.js";
+import { monthlyReport } from "./Controller/StaffAttendenceController/AttendenceSummary/monthlyReport.js";
 
 export const setupRoutes = (hrModels, uploadPath) => {
     const router = express.Router();
@@ -98,6 +99,7 @@ export const setupRoutes = (hrModels, uploadPath) => {
 
     //Attendence Summary
     router.get("/staff_attendence_summary", validate(paginationQuerySchema), injectModels(viewAttendenceSummary));
+    router.get("/staff_attendence_summary/monthly_report", injectModels(monthlyReport));
     return router;
 
 }
