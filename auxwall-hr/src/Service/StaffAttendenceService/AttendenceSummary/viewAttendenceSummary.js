@@ -1,6 +1,15 @@
-export const viewAttendenceSummary = async (limit, offset, AttendenceSummary) => {
+export const viewAttendenceSummary = async (limit, offset, hrModels) => {
     try {
+        const { AttendenceSummary, Staff } = hrModels;
+
         const result = await AttendenceSummary.findAndCountAll({
+            include: [
+                {
+                    model: Staff,
+                    as: 'staff',
+                    attributes: ['name']
+                }
+            ],
             limit: limit,
             offset: offset,
             order: [

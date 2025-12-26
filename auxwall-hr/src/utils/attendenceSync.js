@@ -1,0 +1,55 @@
+import cron from "node-cron";
+
+export const syncAttendence = async (hrModels) => {
+    const { AttendenceSummary, Staff, StaffShift } = hrModels;
+
+    const runSyncTask = async () => {
+        try {
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            const formattedYesterday = yesterday.toISOString().split("T")[0];
+
+            console.log(`--- Syncing Absent Data for: ${formattedYesterday} ---`);
+
+            const primaryKeyField = Staff.primaryKeyAttribute || 'id';
+
+            const [allStaff, allShifts] = await Promise.all([
+                Staff.findAll({ attributes: [primaryKeyField] }),
+                StaffShift.findAll()
+            ]);
+
+            const absentRecord = allStaff.map((staff) => {
+                const actualId = staff[primaryKeyField];
+                const shift = allShifts.find(s => s.staffId === actualId);
+
+                return {
+                    staffId: actualId,
+                    attendenceDate: formattedYesterday,
+                    shiftStart: shift?.shiftStart || "09:00",
+                    shiftEnd: shift?.shiftEnd || "18:00",
+                    first_in: null,
+                    last_out: null,
+                    workedMinutes: 0,
+                    lateMinutes: 0,
+                    overtimeMinutes: 0,
+                    breakMinutes: 0,
+                    totalPunches: 0,
+                    status: "Absent",
+                    createdAt: new Date()
+                };
+            });
+
+            if (absentRecord.length > 0) {
+                await AttendenceSummary.bulkCreate(absentRecord, { ignoreDuplicates: true });
+                console.log(`✅ Successfully finalized absent data for ${formattedYesterday}`);
+            } else {
+                console.log("No staff found to sync.");
+            }
+        } catch (error) {
+            console.error('Error updating yesterday\'s absent data:', error);
+        }
+    };
+
+    await runSyncTask();
+    cron.schedule("30 8 * * 1-6", runSyncTask);
+};

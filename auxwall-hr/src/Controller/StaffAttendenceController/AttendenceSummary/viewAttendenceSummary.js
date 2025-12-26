@@ -5,7 +5,7 @@ export const viewAttendenceSummary = async (req, res, hrModels) => {
     try {
         const { page, size } = req.query;
         const { limit, offset } = getPagination(page, size);
-        const result = await attendanceSummaryService.viewAttendenceSummary(limit, offset, hrModels.AttendenceSummary);
+        const result = await attendanceSummaryService.viewAttendenceSummary(limit, offset, hrModels);
         const response = getPaginationResponse(result, page, limit);
         res.status(200).json(response);
     } catch (error) {

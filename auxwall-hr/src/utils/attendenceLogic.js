@@ -2,31 +2,55 @@
 import { Op } from "sequelize";
 export const updateAttendanceSummary = async (punchingRecord, hrModels) => {
     const { StaffShift, AttendenceSummary, Punching } = hrModels;
-    const { staffId, punchingDate } = punchingRecord;
-    const formattedDate = new Date(punchingDate).toISOString().split('T')[0];
-    const startOfDay = `${formattedDate} 00:00:00`;
-    const endOfDay = `${formattedDate} 23:59:59`;
-    // 1. Get the Staff's Shift requirements
-    const shift = await StaffShift.findOne({ where: { staffId } });
-    const allPunches = await Punching.findAll({
-        where: {
-            staffId, punchingDate: {
-                [Op.between]: [startOfDay, endOfDay]
-            }
-        }, order: [["punchingTime", "ASC"]]
-    });
+    const { staffId, punchingDate, punchingTime } = punchingRecord;
+
     const getMinutes = (time) => {
         const [hours, minutes] = time.split(":").map(Number);
         return hours * 60 + minutes;
     }
 
+    const shift = await StaffShift.findOne({ where: { staffId } });
+
+    const shiftStartMins = getMinutes(shift.shiftStart);
+    const shiftEndMins = getMinutes(shift.shiftEnd);
+    let isNightShift = shiftEndMins < shiftStartMins;
+    let formattedDate = new Date(punchingDate).toISOString().split('T')[0];
+    let targetDate = formattedDate;
+    const punchingTimeMins = getMinutes(punchingTime);
+
+    if (isNightShift) {
+        const morningThreshold = shiftStartMins - 120;
+        if (punchingTimeMins < morningThreshold) {
+            let yesterday = new Date(formattedDate);
+            yesterday.setDate(yesterday.getDate() - 1);
+            targetDate = yesterday.toISOString().split('T')[0];
+        }
+    }
+
+    let startOfDay = `${targetDate} 00:00:00`;
+    let endOfDay = `${targetDate} 23:59:59`;
+
+    if (isNightShift) {
+        const nextDay = new Date(targetDate);
+        nextDay.setDate(nextDay.getDate() + 1);
+        endOfDay = `${nextDay.toISOString().split('T')[0]} 23:59:59`;
+    }
+
+    const punches = await Punching.findAll({
+        where: {
+            staffId, punchingDate: {
+                [Op.between]: [startOfDay, endOfDay]
+            }
+        }, order: [["punchingDate", "ASC"], ["punchingTime", "ASC"]]
+    });
+
     let totalWorkTime = 0;
     let totalBreakTime = 0;
-
-    for (let i = 0; i < allPunches.length - 1; i++) {
-        const current = allPunches[i];
-        const next = allPunches[i + 1];
-        let duration = getMinutes(next.punchingTime) - getMinutes(current.punchingTime);
+    let duration = 0;
+    for (let i = 0; i < punches.length - 1; i++) {
+        const current = punches[i];
+        const next = punches[i + 1];
+        duration = getMinutes(next.punchingTime) - getMinutes(current.punchingTime);
 
         if (duration < 0) duration += 1440;
 
@@ -37,13 +61,12 @@ export const updateAttendanceSummary = async (punchingRecord, hrModels) => {
             totalBreakTime += duration;
         }
     }
-    const firstInPunch = allPunches.find(p => p.punchingType === "In");
-    const lastOutPunch = [...allPunches].reverse().find(p => p.punchingType === "Out");
+
+    const firstInPunch = punches.find(p => p.punchingType === "In");
+    const lastOutPunch = [...punches].reverse().find(p => p.punchingType === "Out");
 
 
-    const shiftStartMins = getMinutes(shift.shiftStart);
-    const shiftEndMins = getMinutes(shift.shiftEnd);
-    let isNightShift = shiftEndMins < shiftStartMins;
+
     let shiftDuration = isNightShift ? (1440 - shiftStartMins) + shiftEndMins : shiftEndMins - shiftStartMins;
 
     let status = "Present";
@@ -56,7 +79,7 @@ export const updateAttendanceSummary = async (punchingRecord, hrModels) => {
         const shiftMinutes = shiftStartMins + (shift.lateGraceMinutes || 0);
 
         if (firstInMins > shiftMinutes) {
-            lateMinutes = firstInMins - shiftStartMins;
+            lateMinutes = firstInMins - shiftMinutes;
             status = "Late";
         }
     }
@@ -64,16 +87,29 @@ export const updateAttendanceSummary = async (punchingRecord, hrModels) => {
     // 5. Overtime Calculation (Only if there is a Last Out)
     if (lastOutPunch) {
         const lastOutMins = getMinutes(lastOutPunch.punchingTime);
-        overtimeMinutes = lastOutMins - shiftEndMins;
+        if (isNightShift) {
+            if (lastOutMins < shiftStartMins) {
+                overtimeMinutes = lastOutMins + 1440 - shiftEndMins;
+            }
+        } else {
+            if (lastOutMins > shiftEndMins) {
+                overtimeMinutes = lastOutMins - shiftEndMins;
+            }
+        }
     }
 
     // 6. Half Day Check
     if (totalWorkTime > 0 && totalWorkTime < (shiftDuration / 2)) {
         status = "Half Day";
     }
+
+    if (punches.length === 0) {
+        status = "Absent";
+    }
+
     await AttendenceSummary.upsert({
         staffId,
-        attendenceDate: formattedDate,
+        attendenceDate: targetDate,
         shiftStart: shift.shiftStart,
         shiftEnd: shift.shiftEnd,
         first_in: firstInPunch?.punchingTime || null,
@@ -82,7 +118,7 @@ export const updateAttendanceSummary = async (punchingRecord, hrModels) => {
         lateMinutes,
         overtimeMinutes,
         breakMinutes: totalBreakTime,
-        totalPunches: allPunches.length,
+        totalPunches: punches.length,
         status,
         createdAt: () => new Date()
     }, {

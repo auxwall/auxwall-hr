@@ -1,6 +1,7 @@
 import { initModels } from "./models/index.js";
 import { setupRoutes } from "./router.js";
 import { updateAttendanceSummary } from "./utils/attendenceLogic.js";
+import { syncAttendence } from "./utils/attendenceSync.js";
 import fs from 'fs';
 
 /**
@@ -39,6 +40,11 @@ export const initializeHRModule = async ({
             await hrModels.StaffShift.sync({ alter: true });
             await hrModels.AttendenceSummary.sync({ alter: true });
             console.log("HR Module tables synced.");
+        }
+        try {
+            await syncAttendence(hrModels);
+        } catch (error) {
+            console.log("Failed to sync attendence", error);
         }
 
         models.Punching.addHook('afterCreate', 'autoUpdateAttendance', async (punch) => {

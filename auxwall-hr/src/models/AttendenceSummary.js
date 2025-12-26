@@ -71,7 +71,13 @@ export const defineAttendenceSummary = (sequelize) => {
     }, {
         tableName: "attendence_summary",
         timestamps: true,
-        createdAt: "created_at"
+        createdAt: "created_at",
+        indexes: [
+            {
+                unique: true,
+                fields: ['staff_id', 'attendence_date']
+            }
+        ]
     })
     return AttendenceSummary;
 }
