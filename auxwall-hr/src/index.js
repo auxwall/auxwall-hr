@@ -16,7 +16,7 @@ import fs from 'fs';
 export const initializeHRModule = async ({
     app,
     sequelize,
-    models,
+    userModels,
     uploadPath,
     path = '/api/hr',
     autoSync = false
@@ -31,7 +31,7 @@ export const initializeHRModule = async ({
             console.log(`Created storage directory at: ${uploadPath}`);
         }
 
-        const hrModels = initModels(sequelize, models);
+        const hrModels = initModels(sequelize, userModels);
 
         if (autoSync) {
             await hrModels.Category.sync({ alter: true });
@@ -47,7 +47,7 @@ export const initializeHRModule = async ({
             console.log("Failed to sync attendence", error);
         }
 
-        models.Punching.addHook('afterCreate', 'autoUpdateAttendance', async (punch) => {
+        userModels.Punching.addHook('afterCreate', 'autoUpdateAttendance', async (punch) => {
             try {
                 await updateAttendanceSummary(punch, {
                     StaffShift: hrModels.StaffShift,
