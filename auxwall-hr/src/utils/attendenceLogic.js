@@ -1,128 +1,161 @@
-// attendanceLogic.js
+
+
 import { Op } from "sequelize";
+
 export const updateAttendanceSummary = async (punchingRecord, hrModels) => {
     const { StaffShift, AttendenceSummary, Punching } = hrModels;
-    const { staffId, punchingDate, punchingTime } = punchingRecord;
+    const { staffId, pin, eventDate } = punchingRecord;
 
-    const getMinutes = (time) => {
-        const [hours, minutes] = time.split(":").map(Number);
-        return hours * 60 + minutes;
+    // 🚨 Validation
+    const clientId = pin;
+    if (!staffId && !clientId) {
+        console.warn("Punch ignored: No staffId or clientId");
+        return;
     }
 
-    const shift = await StaffShift.findOne({ where: { staffId } });
+    const getMinutes = (time) => {
+        const [h, m] = time.split(":").map(Number);
+        return h * 60 + m;
+    };
 
-    const shiftStartMins = getMinutes(shift.shiftStart);
-    const shiftEndMins = getMinutes(shift.shiftEnd);
-    let isNightShift = shiftEndMins < shiftStartMins;
-    let formattedDate = new Date(punchingDate).toISOString().split('T')[0];
-    let targetDate = formattedDate;
-    const punchingTimeMins = getMinutes(punchingTime);
+    const punchDateObj = new Date(eventDate);
+    const targetDate = punchDateObj.toISOString().split("T")[0];
 
-    if (isNightShift) {
-        const morningThreshold = shiftStartMins - 120;
-        if (punchingTimeMins < morningThreshold) {
-            let yesterday = new Date(formattedDate);
-            yesterday.setDate(yesterday.getDate() - 1);
-            targetDate = yesterday.toISOString().split('T')[0];
+    /* =========================
+       1️⃣ SHIFT HANDLING
+       ========================= */
+    let shiftStart = "09:00";
+    let shiftEnd = "18:00";
+    let lateGraceMinutes = 0;
+    let isNightShift = false;
+
+    if (staffId) {
+        const shift = await StaffShift.findOne({ where: { staffId } });
+        if (shift) {
+            shiftStart = shift.shiftStart;
+            shiftEnd = shift.shiftEnd;
+            lateGraceMinutes = shift.lateGraceMinutes || 0;
+
+            const startM = getMinutes(shiftStart);
+            const endM = getMinutes(shiftEnd);
+            isNightShift = endM < startM;
         }
     }
 
-    let startOfDay = `${targetDate} 00:00:00`;
-    let endOfDay = `${targetDate} 23:59:59`;
+    /* =========================
+       2️⃣ DATE RANGE
+       ========================= */
+    let startOfDay = new Date(`${targetDate} T00:00:00Z`);
+    let endOfDay = new Date(`${targetDate} T23:59:59Z`);
 
     if (isNightShift) {
         const nextDay = new Date(targetDate);
         nextDay.setDate(nextDay.getDate() + 1);
-        endOfDay = `${nextDay.toISOString().split('T')[0]} 23:59:59`;
+        endOfDay = new Date(`${nextDay.toISOString().split("T")[0]} T23:59:59Z`);
     }
+
+    /* =========================
+       3️⃣ PUNCH FETCH (FIXED)
+       ========================= */
+    const whereClause = {
+        eventDate: { [Op.between]: [startOfDay, endOfDay] }
+    };
+
+    if (staffId) whereClause.staffId = staffId;
+    if (clientId) whereClause.pin = clientId;
 
     const punches = await Punching.findAll({
-        where: {
-            staffId, punchingDate: {
-                [Op.between]: [startOfDay, endOfDay]
-            }
-        }, order: [["punchingDate", "ASC"], ["punchingTime", "ASC"]]
+        where: whereClause,
+        order: [["eventDate", "ASC"]]
     });
 
+    punches.forEach((p, i) => {
+        p.punchingType = i % 2 === 0 ? "In" : "Out";
+    });
+
+    /* =========================
+       4️⃣ CALCULATIONS
+       ========================= */
     let totalWorkTime = 0;
     let totalBreakTime = 0;
-    let duration = 0;
+
     for (let i = 0; i < punches.length - 1; i++) {
-        const current = punches[i];
+        const curr = punches[i];
         const next = punches[i + 1];
-        duration = getMinutes(next.punchingTime) - getMinutes(current.punchingTime);
 
-        if (duration < 0) duration += 1440;
+        const diff =
+            getMinutes(new Date(next.eventDate).toLocaleTimeString()) -
+            getMinutes(new Date(curr.eventDate).toLocaleTimeString());
 
-        if (current.punchingType === "In" && next.punchingType === "Out") {
+        const duration = diff < 0 ? diff + 1440 : diff;
+
+        if (curr.punchingType === "In" && next.punchingType === "Out")
             totalWorkTime += duration;
-        }
-        if (current.punchingType === "Out" && next.punchingType === "In") {
+
+        if (curr.punchingType === "Out" && next.punchingType === "In")
             totalBreakTime += duration;
-        }
     }
 
-    const firstInPunch = punches.find(p => p.punchingType === "In");
-    const lastOutPunch = [...punches].reverse().find(p => p.punchingType === "Out");
+    const firstIn = punches[0];
+    const lastOut = punches[punches.length - 1];
 
-
-
-    let shiftDuration = isNightShift ? (1440 - shiftStartMins) + shiftEndMins : shiftEndMins - shiftStartMins;
-
-    let status = "Present";
+    /* =========================
+       5️⃣ STATUS LOGIC
+       ========================= */
+    let status = punches.length ? "Present" : "Absent";
     let lateMinutes = 0;
     let overtimeMinutes = 0;
 
-    // 4. Late Calculation
-    if (firstInPunch) {
-        const firstInMins = getMinutes(firstInPunch.punchingTime);
-        const shiftMinutes = shiftStartMins + (shift.lateGraceMinutes || 0);
+    if (staffId && firstIn) {
+        const firstInMin = getMinutes(
+            new Date(firstIn.eventDate).toLocaleTimeString()
+        );
+        const shiftMin = getMinutes(shiftStart) + lateGraceMinutes;
 
-        if (firstInMins > shiftMinutes) {
-            lateMinutes = firstInMins - shiftMinutes;
+        if (firstInMin > shiftMin) {
+            lateMinutes = firstInMin - shiftMin;
             status = "Late";
         }
     }
 
-    // 5. Overtime Calculation (Only if there is a Last Out)
-    if (lastOutPunch) {
-        const lastOutMins = getMinutes(lastOutPunch.punchingTime);
-        if (isNightShift) {
-            if (lastOutMins < shiftStartMins) {
-                overtimeMinutes = lastOutMins + 1440 - shiftEndMins;
-            }
-        } else {
-            if (lastOutMins > shiftEndMins) {
-                overtimeMinutes = lastOutMins - shiftEndMins;
-            }
+    if (staffId && lastOut) {
+        const outMin = getMinutes(
+            new Date(lastOut.eventDate).toLocaleTimeString()
+        );
+        const shiftEndMin = getMinutes(shiftEnd);
+        if (outMin > shiftEndMin) {
+            overtimeMinutes = outMin - shiftEndMin;
         }
     }
 
-    // 6. Half Day Check
-    if (totalWorkTime > 0 && totalWorkTime < (shiftDuration / 2)) {
-        status = "Half Day";
-    }
-
-    if (punches.length === 0) {
-        status = "Absent";
-    }
-
-    await AttendenceSummary.upsert({
-        staffId,
-        attendenceDate: targetDate,
-        shiftStart: shift.shiftStart,
-        shiftEnd: shift.shiftEnd,
-        first_in: firstInPunch?.punchingTime || null,
-        last_out: lastOutPunch?.punchingTime || null,
-        workedMinutes: totalWorkTime,
-        lateMinutes,
-        overtimeMinutes,
-        breakMinutes: totalBreakTime,
-        totalPunches: punches.length,
-        status,
-        createdAt: () => new Date()
-    }, {
-        conflictFields: ['staff_id', 'attendence_date']
-    });
-
+    /* =========================
+       6️⃣ UPSERT (FIXED)
+       ========================= */
+    await AttendenceSummary.upsert(
+        {
+            staffId: staffId || null,
+            clientId: clientId || null,
+            attendenceDate: targetDate,
+            shiftStart,
+            shiftEnd,
+            first_in: firstIn
+                ? new Date(firstIn.eventDate).toLocaleTimeString()
+                : null,
+            last_out: lastOut
+                ? new Date(lastOut.eventDate).toLocaleTimeString()
+                : null,
+            workedMinutes: totalWorkTime,
+            breakMinutes: totalBreakTime,
+            lateMinutes,
+            overtimeMinutes,
+            totalPunches: punches.length,
+            status
+        },
+        {
+            conflictFields: staffId
+                ? ["staff_id", "attendence_date"]
+                : ["client_id", "attendence_date"]
+        }
+    );
 };
+

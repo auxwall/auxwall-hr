@@ -5,7 +5,7 @@ import { defineStaffShift } from "./StaffShifts.js";
 import { defineAttendenceSummary } from "./AttendenceSummary.js";
 
 export const initModels = (sequelize, userModels) => {
-    const { Staff, Company, Punching } = userModels;
+    const { Staff, Company, Punching,Client } = userModels;
 
     // 1. Initialize Functional Models
     const Document = defineDocument(sequelize);
@@ -42,6 +42,7 @@ export const initModels = (sequelize, userModels) => {
 
     // --- AttendenceSummary Links ---
     AttendenceSummary.belongsTo(Staff, { foreignKey: "staffId", as: "staff" });
+    AttendenceSummary.belongsTo(Client, { foreignKey: "clientId", as: "client" });
 
-    return { Document, Category, Activity, Staff, Company, StaffShift, AttendenceSummary, Punching };
+    return { Document, Category, Activity, Staff, Company, StaffShift, AttendenceSummary, Punching ,Client};
 };

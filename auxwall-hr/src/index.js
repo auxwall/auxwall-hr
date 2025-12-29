@@ -52,7 +52,8 @@ export const initializeHRModule = async ({
                 await updateAttendanceSummary(punch, {
                     StaffShift: hrModels.StaffShift,
                     AttendenceSummary: hrModels.AttendenceSummary,
-                    Punching: hrModels.Punching
+                    Punching: hrModels.Punching,
+                    Client:hrModels.Client
                 });
             } catch (error) {
                 console.error("Attendance Automation Error:", error);
