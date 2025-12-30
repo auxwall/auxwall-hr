@@ -3,15 +3,19 @@
 import { Op } from "sequelize";
 
 export const updateAttendanceSummary = async (punchingRecord, hrModels) => {
-    const { StaffShift, AttendenceSummary, Punching } = hrModels;
-    const { staffId, pin, eventDate } = punchingRecord;
+    const { StaffShift, AttendenceSummary, Punching, Staff } = hrModels;
+    const { staffId, eventDate } = punchingRecord;
 
     // 🚨 Validation
-    const clientId = pin;
-    if (!staffId && !clientId) {
-        console.warn("Punch ignored: No staffId or clientId");
+    // const clientId = pin;
+    // if (!staffId && !clientId) {
+    //     console.warn("Punch ignored: No staffId or clientId");
+    //     return;
+    // }
+    if (!staffId) {
         return;
     }
+    const staff = await Staff.findOne({ where: { id: staffId }, attributes: ['fullName'], raw: true });
 
     const getMinutes = (time) => {
         const [h, m] = time.split(":").map(Number);
@@ -62,7 +66,7 @@ export const updateAttendanceSummary = async (punchingRecord, hrModels) => {
     };
 
     if (staffId) whereClause.staffId = staffId;
-    if (clientId) whereClause.pin = clientId;
+    // if (clientId) whereClause.pin = clientId;
 
     const punches = await Punching.findAll({
         where: whereClause,
@@ -134,9 +138,9 @@ export const updateAttendanceSummary = async (punchingRecord, hrModels) => {
     await AttendenceSummary.upsert(
         {
             staffId: staffId || null,
-            clientId: clientId || null,
-            name: punchingRecord.name,
-            companyId: companyId || null,
+            // clientId: clientId || null,
+            staffName: staff?.fullName || null,
+            // companyId: companyId || null,
             attendenceDate: targetDate,
             shiftStart,
             shiftEnd,
@@ -156,8 +160,8 @@ export const updateAttendanceSummary = async (punchingRecord, hrModels) => {
         },
         {
             conflictFields: staffId
-                ? ["staff_id", "attendence_date"]
-                : ["company_id", "client_id", "attendence_date"]
+                ? ["staff_id", "attendence_date"] : null,
+            // : ["company_id", "client_id", "attendence_date"]
         }
     );
 };

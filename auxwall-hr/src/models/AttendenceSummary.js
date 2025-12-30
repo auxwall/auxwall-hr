@@ -12,15 +12,10 @@ export const defineAttendenceSummary = (sequelize) => {
             allowNull: true,
             field: "staff_id"
         },
-        clientId: {
-            type: DataTypes.INTEGER,
+        staffName: {
+            type: DataTypes.STRING,
             allowNull: true,
-            field: "client_id"
-        },
-        companyId: {
-            type: DataTypes.INTEGER,
-            allowNull: true,
-            field: "company_id"
+            field: "staff_name"
         },
         attendenceDate: {
             type: DataTypes.DATEONLY,
@@ -86,10 +81,6 @@ export const defineAttendenceSummary = (sequelize) => {
             {
                 unique: true,
                 fields: ['staff_id', 'attendence_date']
-            },
-            {
-                unique: true,
-                fields: ['company_id', 'client_id', 'attendence_date']
             }
         ]
     })

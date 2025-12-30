@@ -53,7 +53,7 @@ export const initializeHRModule = async ({
                     StaffShift: hrModels.StaffShift,
                     AttendenceSummary: hrModels.AttendenceSummary,
                     Punching: hrModels.Punching,
-                    Client:hrModels.Client
+                    Staff: hrModels.Staff
                 });
             } catch (error) {
                 console.error("Attendance Automation Error:", error);
