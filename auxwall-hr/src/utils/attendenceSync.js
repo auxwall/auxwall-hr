@@ -61,6 +61,7 @@ const processAttendance = async (punchingRecord, targetDate, hrModels) => {
 
     let staffId = punchingRecord.staffId || null;
     let clientId = punchingRecord.pin || punchingRecord.clientId || null;
+    let companyId = punchingRecord.companyId || null;
 
     const getMinutes = (time) => {
         const [h, m] = time.split(":").map(Number);
@@ -94,6 +95,7 @@ const processAttendance = async (punchingRecord, targetDate, hrModels) => {
     const whereClause = { eventDate: { [Op.between]: [startOfDay, endOfDay] } };
     if (staffId) whereClause.staffId = staffId;
     if (clientId) whereClause.pin = clientId;
+    if (companyId) whereClause.companyId = companyId;
 
     const punches = await Punching.findAll({
         where: whereClause,
@@ -145,6 +147,7 @@ const processAttendance = async (punchingRecord, targetDate, hrModels) => {
     await AttendenceSummary.upsert({
         staffId: staffId || null,
         clientId: clientId || null,
+        companyId: companyId || null,
         attendenceDate: targetDate,
         shiftStart,
         shiftEnd,
@@ -157,7 +160,7 @@ const processAttendance = async (punchingRecord, targetDate, hrModels) => {
         totalPunches: punches.length,
         status
     }, {
-        conflictFields: staffId ? ["staff_id", "attendence_date"] : ["client_id", "attendence_date"]
+        conflictFields: staffId ? ["staff_id", "attendence_date"] : ["company_id", "client_id", "attendence_date"]
     });
 };
 
@@ -180,7 +183,7 @@ export const syncAttendence = async (hrModels) => {
 
             // 2️⃣ Fetch staff & client lists
             const allStaff = await Staff.findAll({ attributes: ['id'] });
-            const allClients = await Client.findAll({ attributes: ['id'] });
+            const allClients = await Client.findAll({ attributes: ['id', 'companyId'] });
 
             for (const dateObj of datesToSync) {
                 const formattedDate = dateObj.toISOString().split("T")[0];
@@ -192,7 +195,7 @@ export const syncAttendence = async (hrModels) => {
 
                 // 4️⃣ Process Client Attendance
                 for (const client of allClients) {
-                    await processAttendance({ clientId: client.id }, formattedDate, hrModels);
+                    await processAttendance({ clientId: client.id, companyId: client.companyId }, formattedDate, hrModels);
                 }
             }
 

@@ -17,6 +17,11 @@ export const defineAttendenceSummary = (sequelize) => {
             allowNull: true,
             field: "client_id"
         },
+        companyId: {
+            type: DataTypes.INTEGER,
+            allowNull: true,
+            field: "company_id"
+        },
         attendenceDate: {
             type: DataTypes.DATEONLY,
             allowNull: true,
@@ -84,7 +89,7 @@ export const defineAttendenceSummary = (sequelize) => {
             },
             {
                 unique: true,
-                fields: ['client_id', 'attendence_date']
+                fields: ['company_id', 'client_id', 'attendence_date']
             }
         ]
     })

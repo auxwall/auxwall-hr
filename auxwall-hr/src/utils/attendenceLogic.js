@@ -135,9 +135,12 @@ export const updateAttendanceSummary = async (punchingRecord, hrModels) => {
         {
             staffId: staffId || null,
             clientId: clientId || null,
+            name: punchingRecord.name,
+            companyId: companyId || null,
             attendenceDate: targetDate,
             shiftStart,
             shiftEnd,
+
             first_in: firstIn
                 ? new Date(firstIn.eventDate).toLocaleTimeString()
                 : null,
@@ -154,7 +157,7 @@ export const updateAttendanceSummary = async (punchingRecord, hrModels) => {
         {
             conflictFields: staffId
                 ? ["staff_id", "attendence_date"]
-                : ["client_id", "attendence_date"]
+                : ["company_id", "client_id", "attendence_date"]
         }
     );
 };
