@@ -7,7 +7,7 @@ export const viewAttendenceSummary = async (limit, offset, hrModels) => {
                 {
                     model: Staff,
                     as: 'staff',
-                    attributes: ['name']
+                    attributes: ['fullName']
                 }
             ],
             limit: limit,

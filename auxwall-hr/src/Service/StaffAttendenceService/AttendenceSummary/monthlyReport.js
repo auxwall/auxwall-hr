@@ -100,7 +100,7 @@ export const monthlyReport = async (hrModels, year, month) => {
     }
 
     const staffList = await Staff.findAll({
-        attributes: [Staff.primaryKeyAttribute, 'name']
+        attributes: [Staff.primaryKeyAttribute, 'fullName']
     })
     const monthlyReport = await Promise.all(
         staffList.map(async (staff) => {
@@ -112,7 +112,7 @@ export const monthlyReport = async (hrModels, year, month) => {
             const overtime = await overtimeOfSpecificStaff(staff[primaryKeyAttribute]);
             return {
                 staffId: staff[primaryKeyAttribute],
-                staffName: staff.name,
+                staffName: staff.fullName,
                 totalLeave,
                 totalPresent,
                 totalLate,
