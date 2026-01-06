@@ -14,6 +14,7 @@ yarn-error.log*
 /dist
 /build
 /out
+/node_modules
 
 # ------------------------------------
 # 2. ENVIRONMENT AND SENSITIVE FILES

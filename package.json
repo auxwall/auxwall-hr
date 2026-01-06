@@ -1,0 +1,56 @@
+{
+  "name": "auxwall-hr-module",
+  "version": "1.1.0",
+  "description": "HR Documents Module for Auxwall Integration",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/auxwall/auxwall-hr.git",
+    "directory": "auxwall-hr"
+  },
+  "bugs": {
+    "url": "https://github.com/auxwall/auxwall-hr/issues"
+  },
+  "homepage": "https://github.com/auxwall/auxwall-hr/tree/develop/auxwall-hr#readme",
+  "files": [
+    "src",
+    "README.md"
+  ],
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "rimraf dist && tsc",
+    "dev": "tsc -w",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "hr",
+    "auxwall",
+    "documents",
+    "sequelize"
+  ],
+  "author": "",
+  "license": "ISC",
+  "peerDependencies": {
+    "express": "^5.2.1",
+    "sequelize": "^6.37.7"
+  },
+  "dependencies": {
+    "joi": "^18.0.2",
+    "multer": "^2.0.2",
+    "node-cron": "^4.2.1",
+    "pg": "^8.16.3",
+    "pg-hstore": "^2.3.4"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/multer": "^2.0.0",
+    "@types/node": "^25.0.3",
+    "@types/node-cron": "^3.0.11",
+    "@types/pg": "^8.16.0",
+    "@types/sequelize": "^4.28.20",
+    "rimraf": "^6.1.2",
+    "typescript": "^5.9.3"
+  }
+}
