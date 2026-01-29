@@ -13,8 +13,8 @@ export const createDocument = async (documentData: any, hrModels: HRModels, uplo
             fileSize: documentData.size,
             mimeType: documentData.mimeType,
             staffId: documentData.staffId || null,
-            expiryDate: documentData.expiryDate || null,
-            reminderDays: documentData.reminderDays || null,
+            expiryDate: documentData.expiryDate ? new Date(documentData.expiryDate) : null,
+            reminderDays: documentData.expiryDate ? new Date(documentData.expiryDate).getTime() - 15 * 24 * 60 * 60 * 1000 : null,
             uploadedBy: documentData.uploadedBy,
             status: "Active"
         });

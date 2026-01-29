@@ -1,7 +1,6 @@
-
-
 import { Op } from "sequelize";
 import { HRModels } from "../types.js";
+import moment from "moment";
 
 interface PunchingRecord {
     staffId: number;
@@ -22,15 +21,19 @@ export const updateAttendanceSummary = async (punchingRecord: PunchingRecord, hr
     if (!staffId) {
         return;
     }
-    const staff: any = await Staff.findOne({ where: { id: staffId }, attributes: ['fullName'], raw: true });
+    const staff: any = await Staff.findOne({
+        where: { id: staffId },
+        attributes: ['fullName', 'shiftId'],
+        raw: true
+    });
 
     const getMinutes = (time: string) => {
         const [h, m] = time.split(":").map(Number);
         return h * 60 + m;
     };
 
-    const punchDateObj = new Date(eventDate as string | Date);
-    const targetDate = punchDateObj.toISOString().split("T")[0];
+    const punchMoment = moment(eventDate);
+    const targetDate = punchMoment.format("YYYY-MM-DD");
 
     /* =========================
        1️⃣ SHIFT HANDLING
@@ -40,8 +43,12 @@ export const updateAttendanceSummary = async (punchingRecord: PunchingRecord, hr
     let lateGraceMinutes = 0;
     let isNightShift = false;
 
-    if (staffId) {
-        const shift: any = await StaffShift.findOne({ where: { staffId } });
+    if (staff?.shiftId) {
+        const shift: any = await StaffShift.findOne({
+            where: { id: staff.shiftId },
+            attributes: ['shiftStart', 'shiftEnd', 'lateGraceMinutes'],
+            raw: true
+        });
         if (shift) {
             shiftStart = shift.shiftStart;
             shiftEnd = shift.shiftEnd;
@@ -56,13 +63,21 @@ export const updateAttendanceSummary = async (punchingRecord: PunchingRecord, hr
     /* =========================
        2️⃣ DATE RANGE
        ========================= */
-    let startOfDay = new Date(`${targetDate} T00:00:00Z`);
-    let endOfDay = new Date(`${targetDate} T23:59:59Z`);
+    let startOfDay = moment(targetDate).startOf("day").toDate();
+    let endOfDay = moment(targetDate).endOf("day").toDate();
 
     if (isNightShift) {
-        const nextDay = new Date(targetDate);
-        nextDay.setDate(nextDay.getDate() + 1);
-        endOfDay = new Date(`${nextDay.toISOString().split("T")[0]} T23:59:59Z`);
+        endOfDay = moment(targetDate)
+            .add(1, "day")
+            .endOf("day")
+            .toDate();
+    } else {
+        endOfDay = moment(targetDate)
+            .add(1, "day")
+            .hour(6)
+            .minute(29)
+            .second(59)
+            .toDate();
     }
 
     /* =========================
@@ -94,9 +109,10 @@ export const updateAttendanceSummary = async (punchingRecord: PunchingRecord, hr
         const curr = punches[i];
         const next = punches[i + 1];
 
-        const diff =
-            getMinutes(new Date(next.eventDate).toLocaleTimeString()) -
-            getMinutes(new Date(curr.eventDate).toLocaleTimeString());
+        let diff = moment(next.eventDate).diff(
+            moment(curr.eventDate),
+            "minutes"
+        );
 
         const duration = diff < 0 ? diff + 1440 : diff;
 
@@ -118,9 +134,9 @@ export const updateAttendanceSummary = async (punchingRecord: PunchingRecord, hr
     let overtimeMinutes = 0;
 
     if (staffId && firstIn) {
-        const firstInMin = getMinutes(
-            new Date(firstIn.eventDate).toLocaleTimeString()
-        );
+        const firstInMin =
+            moment(firstIn.eventDate).hours() * 60 +
+            moment(firstIn.eventDate).minutes();
         const shiftMin = getMinutes(shiftStart) + lateGraceMinutes;
 
         if (firstInMin > shiftMin) {
@@ -130,9 +146,7 @@ export const updateAttendanceSummary = async (punchingRecord: PunchingRecord, hr
     }
 
     if (staffId && lastOut) {
-        const outMin = getMinutes(
-            new Date(lastOut.eventDate).toLocaleTimeString()
-        );
+        const outMin = moment(lastOut.eventDate).hours() * 60 + moment(lastOut.eventDate).minutes();
         const shiftEndMin = getMinutes(shiftEnd);
         if (outMin > shiftEndMin) {
             overtimeMinutes = outMin - shiftEndMin;
@@ -153,10 +167,10 @@ export const updateAttendanceSummary = async (punchingRecord: PunchingRecord, hr
             shiftEnd,
 
             first_in: firstIn
-                ? new Date(firstIn.eventDate).toLocaleTimeString()
+                ? moment(firstIn.eventDate).format("HH:mm:ss")
                 : null,
             last_out: lastOut
-                ? new Date(lastOut.eventDate).toLocaleTimeString()
+                ? moment(lastOut.eventDate).format("HH:mm:ss")
                 : null,
             workedMinutes: totalWorkTime,
             breakMinutes: totalBreakTime,

@@ -1,10 +1,27 @@
-export const viewShifts = async (limit, offset, staffShift) => {
-    const viewShifts = await staffShift.findAndCountAll({
+import { Op } from "sequelize";
+export const viewShifts = async (limit, offset, staffShift, Department, companyId, departmentId, name) => {
+    const whereClause: any = {};
+    if (companyId) {
+        whereClause.companyId = companyId;
+    }
+    if (departmentId) {
+        whereClause.departmentId = departmentId;
+    }
+    if (name) {
+        whereClause.shiftName = { [Op.iLike]: `%${name}%` };
+    }
+    const result = await staffShift.findAndCountAll({
         limit,
         offset,
-        order: [
-            ['id', 'ASC']
-        ]
+        where: whereClause,
+        include: [
+            {
+                model: Department,
+                as: 'department',
+                attributes: ['id', 'name']
+            }
+        ],
+        order: [['id', 'ASC']]
     });
-    return viewShifts;
-}
+    return result;
+};

@@ -6,8 +6,9 @@ import * as categoriesService from "../../Service/CategoriesService/getCategorie
 export const getCategories = async (req: Request, res: Response, hrModels: HRModels) => {
     try {
         const { page, size } = req.query;
+        const companyId = parseInt(req.params.id);
         const { limit, offset } = getPagination(page, size);
-        const categories = await categoriesService.getCategories(limit, offset, hrModels.Category);
+        const categories = await categoriesService.getCategories(limit, offset, hrModels.Category, companyId);
         const response = getPaginationResponse(categories, page, limit);
         res.status(200).json(response);
     } catch (error) {

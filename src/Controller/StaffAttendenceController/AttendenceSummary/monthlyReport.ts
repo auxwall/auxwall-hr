@@ -5,7 +5,8 @@ import * as attendanceSummaryService from "../../../Service/StaffAttendenceServi
 export const monthlyReport = async (req: Request, res: Response, hrModels: HRModels) => {
     try {
         const { year, month } = req.query;
-        const result = await attendanceSummaryService.monthlyReport(hrModels, year, month);
+        const companyId = parseInt(req.params.id);
+        const result = await attendanceSummaryService.monthlyReport(hrModels, year, month, companyId);
         res.status(200).json(result);
     } catch (error) {
         console.error("Error fetching monthly report:", error);

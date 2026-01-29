@@ -4,11 +4,9 @@ export const categoryBodySchema = Joi.object({
 
     name: Joi.string()
         .min(2)
-        .max(15)
         .required()
         .messages({
             'string.min': 'Category name must be at least 2 characters long',
-            'string.max': 'Category name must be at most 15 characters long',
             'any.required': 'Category "name" is required'
         }),
 

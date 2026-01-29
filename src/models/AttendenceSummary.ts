@@ -68,11 +68,14 @@ export const defineAttendenceSummary = (sequelize) => {
             field: "total_punches"
         },
         status: {
-            type: DataTypes.ENUM("Present", "Late", "Absent", "Half Day", "Leave"),
+            type: DataTypes.ENUM("Present", "Late", "Absent", "Half Day"),
             allowNull: true,
             field: "status"
+        },
+        companyId: {
+            type: DataTypes.INTEGER,
+            allowNull: true
         }
-
     }, {
         tableName: "attendence_summary",
         timestamps: true,

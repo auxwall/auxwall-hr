@@ -4,7 +4,8 @@ import * as dashboardService from "../../Service/DashboardService/getRecentActiv
 
 export const getRecentActivities = async (req: Request, res: Response, hrModels: HRModels) => {
     try {
-        const document = await dashboardService.getRecentActivities(hrModels.Activity);
+        const companyId = parseInt(req.params.id);
+        const document = await dashboardService.getRecentActivities(hrModels.Activity, companyId);
         res.status(200).json(document);
     } catch (error) {
         res.status(500).json({ error: error.message });

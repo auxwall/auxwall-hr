@@ -5,9 +5,10 @@ import * as documentService from "../../Service/DocumentsService/getDocuments.js
 
 export const getDocuments = async (req: Request, res: Response, hrModels: HRModels) => {
     try {
-        const { page, size } = req.query;
+        const { page, size, status, type } = req.query;
         const { limit, offset } = getPagination(page, size);
-        const documents = await documentService.getDocuments(limit, offset, hrModels.Document);
+        const companyId = parseInt(req.params.companyId);
+        const documents = await documentService.getDocuments(limit, offset, status, type, companyId, hrModels.Document, hrModels.Staff);
         const response = getPaginationResponse(documents, page, limit);
         res.status(200).json(response);
     } catch (error) {

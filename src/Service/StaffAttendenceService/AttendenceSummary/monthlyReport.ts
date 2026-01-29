@@ -1,8 +1,8 @@
 import { HRModels } from '../../../types.js';
 import { Op } from "sequelize";
 
-export const monthlyReport = async (hrModels: HRModels, year: any, month: any) => {
-    const { AttendenceSummary, Staff } = hrModels;
+export const monthlyReport = async (hrModels: HRModels, year: any, month: any, companyId: number) => {
+    const { AttendenceSummary, Staff, Company } = hrModels;
     let _year = year ? year : new Date().getFullYear();
     let _month = month ? month : new Date().getMonth();
     const startDate = new Date(_year, _month, 1);
@@ -10,6 +10,7 @@ export const monthlyReport = async (hrModels: HRModels, year: any, month: any) =
 
     const totalLeaveOfMonth = await AttendenceSummary.count({
         where: {
+            companyId,
             status: "Absent",
             attendenceDate: {
                 [Op.gte]: startDate,
@@ -19,6 +20,7 @@ export const monthlyReport = async (hrModels: HRModels, year: any, month: any) =
     })
     const totalPresentOfMonth = await AttendenceSummary.count({
         where: {
+            companyId,
             status: "Present",
             attendenceDate: {
                 [Op.gte]: startDate,
@@ -28,6 +30,7 @@ export const monthlyReport = async (hrModels: HRModels, year: any, month: any) =
     })
     const totalLateOfMonth = await AttendenceSummary.count({
         where: {
+            companyId,
             status: "Late",
             attendenceDate: {
                 [Op.gte]: startDate,
@@ -38,6 +41,7 @@ export const monthlyReport = async (hrModels: HRModels, year: any, month: any) =
     const totalLeaveOfSpecificStaff = async (staffId: number) => {
         return await AttendenceSummary.count({
             where: {
+                companyId,
                 staffId: staffId,
                 status: "Absent",
                 attendenceDate: {
@@ -51,6 +55,7 @@ export const monthlyReport = async (hrModels: HRModels, year: any, month: any) =
     const totalPresentOfSpecificStaff = async (staffId: number) => {
         return await AttendenceSummary.count({
             where: {
+                companyId,
                 staffId: staffId,
                 status: "Present",
                 attendenceDate: {
@@ -66,6 +71,7 @@ export const monthlyReport = async (hrModels: HRModels, year: any, month: any) =
     const totalLateOfSpecificStaff = async (staffId: number) => {
         return await AttendenceSummary.count({
             where: {
+                companyId,
                 staffId: staffId,
                 status: "Late",
                 attendenceDate: {
@@ -78,6 +84,7 @@ export const monthlyReport = async (hrModels: HRModels, year: any, month: any) =
     const totalHalfDayOfSpecificStaff = async (staffId: number) => {
         return await AttendenceSummary.count({
             where: {
+                companyId,
                 staffId: staffId,
                 status: "Half Day",
                 attendenceDate: {
@@ -91,6 +98,7 @@ export const monthlyReport = async (hrModels: HRModels, year: any, month: any) =
     const overtimeOfSpecificStaff = async (staffId: number) => {
         return await AttendenceSummary.sum('overtimeMinutes', {
             where: {
+                companyId,
                 staffId: staffId,
                 attendenceDate: {
                     [Op.gte]: startDate,
@@ -101,6 +109,11 @@ export const monthlyReport = async (hrModels: HRModels, year: any, month: any) =
     }
 
     const staffList = await Staff.findAll({
+        include: [{
+            model: Company,
+            where: { id: companyId },
+            through: { attributes: [] }
+        }],
         attributes: [Staff.primaryKeyAttribute || 'id', 'fullName']
     })
     const monthlyReport = await Promise.all(
@@ -118,7 +131,7 @@ export const monthlyReport = async (hrModels: HRModels, year: any, month: any) =
                 totalPresent,
                 totalLate,
                 totalHalfDay,
-                overtime
+                overtime: overtime || 0
             }
         }
         ));

@@ -11,20 +11,25 @@ export const getByCategory = async function (req: Request, res: Response, hrMode
             name,
             expiry_start,
             expiry_end,
+            type,
+            status,
             page,
             size
         } = req.query;
         const { limit, offset } = getPagination(page, size);
-
+        const companyId = parseInt(req.params.id);
         const result = await dashboardService.getByCategory(
             categoryId,
             category,
             name,
             expiry_start,
             expiry_end,
+            type,
+            status,
             limit,
             offset,
-            hrModels
+            hrModels,
+            companyId
         );
 
         res.status(200).json({

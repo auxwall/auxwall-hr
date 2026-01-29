@@ -6,7 +6,7 @@ export const documentBodySchema = Joi.object({
     staffId: Joi.number().optional().allow(null),
     uploadedBy: Joi.number().required(),
     expiryDate: Joi.date().greater('now').required(),
-    reminderDays: Joi.date().required(),
+    reminderDays: Joi.date().optional().allow(null),
     status: Joi.string()
         .valid("Active", "Expired", "Archived")
         .default("Active"),

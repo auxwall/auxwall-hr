@@ -6,8 +6,9 @@ import * as activitiesService from "../../Service/ActivitiesService/getActivitie
 export const getActivities = async (req: Request, res: Response, hrModels: HRModels) => {
     const { page, size } = req.query;
     const { limit, offset } = getPagination(page, size);
+    const companyId = parseInt(req.params.id);
     try {
-        const activities = await activitiesService.getActivities(limit, offset, hrModels.Activity)
+        const activities = await activitiesService.getActivities(limit, offset, hrModels.Activity, companyId)
         const response = getPaginationResponse(activities, page, limit);
         res.status(200).json(response);
     }

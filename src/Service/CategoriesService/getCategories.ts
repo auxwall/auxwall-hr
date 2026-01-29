@@ -1,5 +1,8 @@
-export async function getCategories(limit, offset, CategoryModel) {
+export async function getCategories(limit, offset, CategoryModel, companyId) {
     const categories = await CategoryModel.findAndCountAll({
+        where: {
+            companyId
+        },
         limit,
         offset,
         include: [{

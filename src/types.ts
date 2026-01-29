@@ -4,6 +4,7 @@ export interface UserModels {
     Staff: ModelStatic<Model<any, any>>;
     Company: ModelStatic<Model<any, any>>;
     Punching: ModelStatic<Model<any, any>>;
+    CompanyUserRelation: ModelStatic<Model<any, any>>;
 }
 
 export interface HRModels extends UserModels {
@@ -12,4 +13,7 @@ export interface HRModels extends UserModels {
     Activity: ModelStatic<Model<any, any>>;
     StaffShift: ModelStatic<Model<any, any>>;
     AttendenceSummary: ModelStatic<Model<any, any>>;
+    Department: ModelStatic<Model<any, any>>;
+    CronLog: ModelStatic<Model<any, any>>;
+    Schedule: ModelStatic<Model<any, any>>;
 }

@@ -6,6 +6,7 @@ import fs from 'fs';
 import { Sequelize } from 'sequelize';
 import { Express, Router } from 'express';
 import { UserModels, HRModels } from './types.js';
+import { syncDocStatus } from "./utils/syncDocStatus.js";
 
 interface HROptions {
     app: Express;
@@ -51,10 +52,18 @@ export const initializeHRModule = async ({
             await hrModels.Activity.sync({ alter: true });
             await hrModels.StaffShift.sync({ alter: true });
             await hrModels.AttendenceSummary.sync({ alter: true });
+            await hrModels.Department.sync({ alter: true });
+            await hrModels.CronLog.sync({ alter: true });
+            await hrModels.Schedule.sync({ alter: true });
             console.log("HR Module tables synced.");
         }
         try {
             await syncAttendence(hrModels);
+            try {
+                await syncDocStatus(hrModels);
+            } catch (error) {
+                console.log("Failed to sync document status", error);
+            }
         } catch (error) {
             console.log("Failed to sync attendence", error);
         }

@@ -7,10 +7,10 @@ export const defineStaffShift = (sequelize) => {
             primaryKey: true,
             autoIncrement: true
         },
-        staffId: {
+        uploadedBy: {
             type: DataTypes.INTEGER,
-            allowNull: false,
-            field: "staff_id"
+            allowNull: true,
+            field: "uploaded_by"
         },
         shiftName: {
             type: DataTypes.STRING,
@@ -37,10 +37,15 @@ export const defineStaffShift = (sequelize) => {
             allowNull: true,
             field: "late_grace_minutes"
         },
-        overtimeMinutes: {
+        companyId: {
             type: DataTypes.INTEGER,
             allowNull: true,
-            field: "overtime_after_minutes"
+            field: "companyId"
+        },
+        departmentId: {
+            type: DataTypes.INTEGER,
+            allowNull: true,
+            field: "departmentId"
         }
     }, {
         tableName: "staff_shifts"

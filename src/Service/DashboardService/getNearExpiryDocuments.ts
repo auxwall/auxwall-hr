@@ -1,6 +1,6 @@
 import { Op } from "sequelize";
 
-export async function getNearExpiryDocuments(documentsModels) {
+export async function getNearExpiryDocuments(documentsModels, companyId) {
     const today = new Date();
     const sixtyDaysLater = new Date();
     sixtyDaysLater.setDate(today.getDate() + 60);
@@ -9,6 +9,7 @@ export async function getNearExpiryDocuments(documentsModels) {
             limit: 15,
             order: [['expiryDate', 'ASC']],
             where: {
+                companyId,
                 status: "Active",
                 expiryDate: {
                     [Op.gt]: today,

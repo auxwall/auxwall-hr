@@ -8,7 +8,7 @@ const app = express();
 app.use(express.json());
 
 // 1. Initialize PostgreSQL Database
-const sequelize = new Sequelize('companydb', 'postgres', 'admin', {
+const sequelize = new Sequelize('testdb', 'postgres', 'admin', {
     host: 'localhost',
     dialect: 'postgres',
     logging: false, // Set to console.log to debug SQL queries
