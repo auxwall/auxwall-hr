@@ -12,6 +12,7 @@ export const shiftBodySchema = Joi.object({
     }),
     breakMinutes: Joi.number().integer().positive().optional(),
     lateGraceMinutes: Joi.number().integer().positive().optional(),
+    overtimeMinutes: Joi.number().integer().positive().optional(),
     companyId: Joi.number().integer().positive().optional().allow(null),
     departmentId: Joi.number().integer().positive().optional().allow(null)
 })
@@ -27,6 +28,7 @@ export const updateShiftSchema = Joi.object({
     }),
     breakMinutes: Joi.number().integer().positive().optional(),
     lateGraceMinutes: Joi.number().integer().positive().optional(),
+    overtimeMinutes: Joi.number().integer().positive().optional(),
     companyId: Joi.number().integer().positive().optional().allow(null),
     departmentId: Joi.number().integer().positive().optional().allow(null)
 })

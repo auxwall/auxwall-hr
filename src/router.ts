@@ -59,6 +59,8 @@ import { deleteDepartment } from "./Controller/DepartmentController/deleteDepart
 
 import { createOrUpdateSchedule } from "./Controller/ScheduleController/createSchedule.js";
 import { getSchedule } from "./Controller/ScheduleController/getSchedule.js";
+import { getScheduleById } from "./Controller/ScheduleController/getScheduleById.js";
+import { deleteSchedule } from "./Controller/ScheduleController/deleteSchedule.js";
 
 export const setupRoutes = (hrModels: HRModels, uploadPath: string): Router => {
     const router = express.Router();
@@ -130,7 +132,9 @@ export const setupRoutes = (hrModels: HRModels, uploadPath: string): Router => {
 
 
     router.post("/schedule", injectModels(createOrUpdateSchedule));
-    router.get("/schedule/:id", injectModels(getSchedule));
+    router.get("/schedules/:id", injectModels(getSchedule));
+    router.get("/schedule/:id", injectModels(getScheduleById));
+    router.delete("/schedule/:id", injectModels(deleteSchedule));
     // router.put("/departments/:id", validate(departmentIdSchema, 'params'), validate(updateDepartmentSchema), injectModels(updateDepartment));
     // router.delete("/departments/:id", validate(departmentIdSchema, 'params'), injectModels(deleteDepartment));
 

@@ -37,6 +37,11 @@ export const defineStaffShift = (sequelize) => {
             allowNull: true,
             field: "late_grace_minutes"
         },
+        overtimeMinutes: {
+            type: DataTypes.INTEGER,
+            allowNull: true,
+            field: "overtime_minutes"
+        },
         companyId: {
             type: DataTypes.INTEGER,
             allowNull: true,

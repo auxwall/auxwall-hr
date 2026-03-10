@@ -58,7 +58,7 @@ export const initModels = (sequelize: Sequelize, userModels: UserModels): HRMode
 
     // --- Schedule Links ---
     Schedule.belongsTo(Company, { foreignKey: "companyId" });
-    Schedule.belongsTo(Department, { foreignKey: "departmentId" });
+    Schedule.belongsTo(Department, { foreignKey: "departmentId", as: "department" });
 
     // --- Department Links ---
     Department.belongsTo(Company, { foreignKey: "companyId" });

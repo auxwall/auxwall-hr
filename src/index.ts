@@ -7,6 +7,8 @@ import { Sequelize } from 'sequelize';
 import { Express, Router } from 'express';
 import { UserModels, HRModels } from './types.js';
 import { syncDocStatus } from "./utils/syncDocStatus.js";
+// import { setupAttendanceTrigger } from "./utils/attendenceTrigger.js";
+// import { processAttendanceQueue } from "./utils/processAttendence.js";
 
 interface HROptions {
     app: Express;
@@ -15,6 +17,7 @@ interface HROptions {
     uploadPath: string;
     path?: string;
     autoSync?: boolean;
+    insertFakeAttendanceFn?: Function;
 }
 
 /**
@@ -25,6 +28,7 @@ interface HROptions {
  * @param {String} options.uploadPath 
  * @param {String} [options.path] 
  * @param {Boolean} [options.autoSync]
+ * @param {Function} [options.insertFakeAttendanceFn]
  */
 export const initializeHRModule = async ({
     app,
@@ -32,7 +36,8 @@ export const initializeHRModule = async ({
     userModels,
     uploadPath,
     path = '/api/hr',
-    autoSync = false
+    autoSync = false,
+    insertFakeAttendanceFn
 }: HROptions): Promise<{ hrModels: HRModels; hrRouter: Router }> => {
     try {
         if (!uploadPath) {
@@ -57,8 +62,31 @@ export const initializeHRModule = async ({
             await hrModels.Schedule.sync({ alter: true });
             console.log("HR Module tables synced.");
         }
+
         try {
+            if (insertFakeAttendanceFn) {
+                console.log("insertFakeAttendanceFn is present");
+                const originalFn = insertFakeAttendanceFn;
+
+                insertFakeAttendanceFn = async (...args: any[]) => {
+                    const result = await originalFn.apply(null, args);
+                    try {
+                        if (result?.attendance) {
+                            console.log("result.attendance", result.attendance);
+                            await updateAttendanceSummary([result.attendance], hrModels);
+                            console.log("updateAttendanceSummary triggered from sub-module after insertFakeAttendance");
+                        }
+                    } catch (err) {
+                        console.error("Error triggering updateAttendanceSummary from sub-module:", err);
+                    }
+
+                    return result;
+                };
+
+            }
             await syncAttendence(hrModels);
+            // await setupAttendanceTrigger(hrModels, sequelize);
+            // setInterval(() => processAttendanceQueue(sequelize, hrModels), 30000);
             try {
                 await syncDocStatus(hrModels);
             } catch (error) {
@@ -68,13 +96,13 @@ export const initializeHRModule = async ({
             console.log("Failed to sync attendence", error);
         }
 
-        userModels.Punching.addHook('afterCreate', 'autoUpdateAttendance', async (punch) => {
-            try {
-                await updateAttendanceSummary(punch as any, hrModels);
-            } catch (error) {
-                console.error("Attendance Automation Error:", error);
-            }
-        });
+        // userModels.Punching.addHook('afterCreate', 'autoUpdateAttendance', async (punch) => {
+        //     try {
+        //         await updateAttendanceSummary(punch as any, hrModels);
+        //     } catch (error) {
+        //         console.error("Attendance Automation Error:", error);
+        //     }
+        // });
 
         console.log("HR Module initialized with automatic attendance tracking.");
 

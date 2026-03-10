@@ -1,5 +1,5 @@
 export const getAllSchedules = async (type, hrModels, companyId = null, departmentId = null) => {
-    const { Schedule, StaffShift } = hrModels;
+    const { Schedule, StaffShift, Department } = hrModels;
 
     // 1️⃣ Fetch schedules
     const schedules = await Schedule.findAll({
@@ -7,7 +7,13 @@ export const getAllSchedules = async (type, hrModels, companyId = null, departme
             companyId,
             ...(type ? { type: type.toLowerCase() } : {}),
             ...(departmentId ? { departmentId } : {})
-        }
+        }, include: [
+            {
+                model: Department,
+                as: 'department',
+                attributes: ['id', 'name']
+            }
+        ]
     });
 
     // 2️⃣ Fetch all shifts
@@ -29,6 +35,7 @@ export const getAllSchedules = async (type, hrModels, companyId = null, departme
             name: s.name,
             companyId: s.companyId,
             departmentId: s.departmentId,
+            departmentName: s.department?.name,
             data: mappedData
         };
     });

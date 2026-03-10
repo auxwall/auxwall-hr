@@ -96,7 +96,6 @@ import moment from "moment";
 
 export const syncAttendence = async (hrModels: HRModels) => {
     await recoverMissedDays(hrModels);
-
     cron.schedule("30 6 * * 1-6", async () => {
         await runSyncTask(hrModels);
         await hrModels.CronLog.upsert({
