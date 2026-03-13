@@ -389,7 +389,9 @@ export const updateAttendanceSummary = async (
     } = hrModels;
     console.log("🟢 updateAttendanceSummary started");
 
-    const { staffId, eventDate } = punchingRecord;
+    // const { staffId, eventDate } = punchingRecord;
+    const record = punchingRecord.dataValues || punchingRecord;
+    const { staffId, eventDate } = record;
     if (!staffId || !eventDate) {
         console.log("⛔ Missing staffId / eventDate", punchingRecord);
         return;
@@ -447,10 +449,18 @@ export const updateAttendanceSummary = async (
             staffShiftId = schedule.data[`Day ${dayNo}`] ?? null;
         }
 
+        console.log("Schedule record:", schedule);
+        console.log("Schedule data:", schedule?.data);
+        console.log("Target date:", targetDate);
+        console.log("Day key:", moment(targetDate).format("ddd"));
+        console.log("Selected shiftId:", staffShiftId);
+
+
         if (staffShiftId) {
             const shift: any = await StaffShift.findByPk(staffShiftId, {
                 raw: true
             });
+            console.log("Loaded shift:", shift);
 
             if (shift) {
                 shiftStart = shift.shiftStart;
@@ -489,7 +499,6 @@ export const updateAttendanceSummary = async (
        ========================= */
     const startOfRange = shiftStartDT.clone().subtract(6, "hours").toDate();
     const endOfRange = overtimeEndDT.toDate();
-
     const punches: any[] = await Punching.findAll({
         where: {
             staffId,
@@ -546,31 +555,76 @@ export const updateAttendanceSummary = async (
     /* =========================
        8️⃣ STATUS, LATE, OT
        ========================= */
-    let status = "Present";
+    // let status = "Present";
+    // let lateMinutes = 0;
+    // let overtimeMinutes = 0;
+
+    // const firstInDT = moment(firstIn.eventDate);
+    // const lateThresholdDT = shiftStartDT.clone().add(lateGraceMinutes, "minutes");
+
+    // if (firstInDT.isAfter(lateThresholdDT)) {
+    //     lateMinutes = firstInDT.diff(lateThresholdDT, "minutes");
+    //     status = "Late";
+    // }
+
+    // const lastOutDT = moment(lastOut.eventDate);
+
+    // if (lastOutDT.isAfter(shiftEndDT)) {
+    //     overtimeMinutes = lastOutDT.diff(shiftEndDT, "minutes");
+    //     overtimeMinutes = Math.min(overtimeMinutes, overtimeLimitMinutes);
+    // }
+
+    // if (overtimeMinutes > 0 && status === "Present") {
+    //     status = "Overtime";
+    // }
+
+    // if (overtimeMinutes > 0 && lateMinutes > 0) {
+    //     status = "Late + Overtime";
+    // }
+    // if (lateMinutes > 0) {
+    //     status = "Late";
+    // }
+    // else if (overtimeMinutes > 0) {
+    //     status = "Overtime";
+    // }
+    // else {
+    //     status = "Present";
+    // }
+    let status = "Absent";
     let lateMinutes = 0;
     let overtimeMinutes = 0;
 
     const firstInDT = moment(firstIn.eventDate);
+    const lastOutDT = moment(lastOut.eventDate);
+
     const lateThresholdDT = shiftStartDT.clone().add(lateGraceMinutes, "minutes");
 
     if (firstInDT.isAfter(lateThresholdDT)) {
         lateMinutes = firstInDT.diff(lateThresholdDT, "minutes");
-        status = "Late";
     }
 
-    const lastOutDT = moment(lastOut.eventDate);
-
+    /* ===== Calculate overtime ===== */
     if (lastOutDT.isAfter(shiftEndDT)) {
         overtimeMinutes = lastOutDT.diff(shiftEndDT, "minutes");
         overtimeMinutes = Math.min(overtimeMinutes, overtimeLimitMinutes);
     }
 
-    if (overtimeMinutes > 0 && status === "Present") {
-        status = "Overtime";
-    }
+    /* ===== Shift duration ===== */
+    const shiftDurationMinutes = shiftEndDT.diff(shiftStartDT, "minutes");
+    const halfDayMinutes = shiftDurationMinutes / 2;
 
-    if (overtimeMinutes > 0 && lateMinutes > 0) {
-        status = "Late + Overtime";
+    /* ===== STATUS RULES ===== */
+    if (workedMinutes === 0) {
+        status = "Absent";
+    }
+    else if (workedMinutes < halfDayMinutes) {
+        status = "Half Day";
+    }
+    else if (lateMinutes > 0) {
+        status = "Late";
+    }
+    else {
+        status = "Present";
     }
     console.log("✅ Summary data:", {
         staffId,
