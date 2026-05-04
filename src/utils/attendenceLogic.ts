@@ -402,12 +402,12 @@ export const updateAttendanceSummary = async (
        ========================= */
     const staff: any = await Staff.findOne({
         where: { id: staffId },
-        attributes: ["fullName", "shiftId"],
+        attributes: ["fullName", "shiftId", "scheduleId"],
         raw: true
     });
 
-    if (!staff?.shiftId) {
-        console.log("⛔ Staff not found or no shift assigned", staffId);
+    if (!staff?.scheduleId) {
+        console.log("⛔ Staff not found or no schedule assigned", staffId);
         return;
     }
 
@@ -430,8 +430,12 @@ export const updateAttendanceSummary = async (
     /* =========================
        3️⃣ LOAD SCHEDULE & SHIFT
        ========================= */
+    // const schedule: any = await Schedule.findOne({
+    //     where: { id: staff.shiftId },
+    //     raw: true
+    // });
     const schedule: any = await Schedule.findOne({
-        where: { id: staff.shiftId },
+        where: { id: staff.scheduleId },
         raw: true
     });
     console.log("schedule");
