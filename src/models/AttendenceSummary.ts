@@ -68,7 +68,7 @@ export const defineAttendenceSummary = (sequelize) => {
             field: "total_punches"
         },
         status: {
-            type: DataTypes.ENUM("Present", "Late", "Absent", "Half Day"),
+            type: DataTypes.ENUM("Present", "Late", "Absent", "Half Day", "Unauthorized"),
             allowNull: true,
             field: "status"
         },

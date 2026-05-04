@@ -49,6 +49,8 @@ import { viewShiftById } from "./Controller/StaffAttendenceController/StaffShift
 import { viewAttendenceSummary } from "./Controller/StaffAttendenceController/AttendenceSummary/viewAttendenceSummary.js";
 import { monthlyReport } from "./Controller/StaffAttendenceController/AttendenceSummary/monthlyReport.js";
 import { getAttendenceStatus } from "./Controller/StaffAttendenceController/AttendenceSummary/getAttendenceStatus.js";
+import { updateUnauthorizedAttendence } from "./Controller/StaffAttendenceController/AttendenceSummary/updateUnauthorizedAttendence.js";
+import { deleteUnauthorizedAttendence } from "./Controller/StaffAttendenceController/AttendenceSummary/deleteUnauthorizedAttendence.js";
 
 import { HRModels } from "./types.js";
 import { getDepartments } from "./Controller/DepartmentController/getDepartments.js";
@@ -61,6 +63,7 @@ import { createOrUpdateSchedule } from "./Controller/ScheduleController/createSc
 import { getSchedule } from "./Controller/ScheduleController/getSchedule.js";
 import { getScheduleById } from "./Controller/ScheduleController/getScheduleById.js";
 import { deleteSchedule } from "./Controller/ScheduleController/deleteSchedule.js";
+import { attendenceById } from "./Controller/StaffAttendenceController/AttendenceSummary/attendanceById.js";
 
 export const setupRoutes = (hrModels: HRModels, uploadPath: string): Router => {
     const router = express.Router();
@@ -117,10 +120,11 @@ export const setupRoutes = (hrModels: HRModels, uploadPath: string): Router => {
 
     //Attendence Summary
     router.get("/staff_attendence_summary/:id", validate(paginationQuerySchema), injectModels(viewAttendenceSummary));
+    router.get("/attendence_by_id/:id", injectModels(attendenceById))
     router.get("/staff_attendence_summary/monthly_report/:id", injectModels(monthlyReport));
     router.get("/attendence_status", injectModels(getAttendenceStatus));
-
-
+    router.put("/unauthorized_attendence/:id", injectModels(updateUnauthorizedAttendence));
+    router.delete("/unauthorized_attendence/:id", injectModels(deleteUnauthorizedAttendence));
     //Departments
     router.get("/departments/:id", validate(paginationQuerySchema), injectModels(getDepartments));
     router.put("/departments/:id", validate(departmentIdSchema, 'params'), injectModels(updateDepartment));

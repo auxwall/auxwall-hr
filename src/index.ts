@@ -205,15 +205,15 @@ export const initializeHRModule = async ({
         -----------------------------
         */
 
-        try {
+        // try {
 
-            await syncAttendence(hrModels);
+        //     await syncAttendence(hrModels);
 
-        } catch (error) {
+        // } catch (error) {
 
-            console.log("Failed to sync attendance", error);
+        //     console.log("Failed to sync attendance", error);
 
-        }
+        // }
 
         /*
         -----------------------------
