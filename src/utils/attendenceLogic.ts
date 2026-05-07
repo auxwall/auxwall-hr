@@ -14,15 +14,43 @@ export const updateAttendanceSummary = async (
         AttendenceSummary
     } = hrModels;
     console.log("🟢 updateAttendanceSummary started");
-
+    console.log(punchingRecord);
     // const { staffId, eventDate } = punchingRecord;
-    const record = punchingRecord.dataValues || punchingRecord;
+    // const record = punchingRecord.dataValues || punchingRecord;
+    // const { staffId, eventDate } = record;
+    let record;
+
+    if (Array.isArray(punchingRecord)) {
+
+        if (punchingRecord.length === 0) {
+            console.log("⛔ Empty punches array");
+            return;
+        }
+
+        record =
+            punchingRecord[0].dataValues ||
+            punchingRecord[0];
+
+    } else {
+
+        record =
+            punchingRecord.dataValues ||
+            punchingRecord;
+    }
+
     const { staffId, eventDate } = record;
-    let isUnauthorized = false;
+
+
+
     if (!staffId || !eventDate) {
-        console.log("⛔ Missing staffId / eventDate", punchingRecord);
+        console.log("⛔ Missing staffId / eventDate", record);
         return;
     }
+    let isUnauthorized = false;
+    // if (!staffId || !eventDate) {
+    //     console.log("⛔ Missing staffId / eventDate", punchingRecord);
+    //     return;
+    // }
 
     /* =========================
        1️⃣ STAFF
@@ -37,13 +65,13 @@ export const updateAttendanceSummary = async (
         console.log("⛔ Staff not found or no schedule assigned", staffId);
         return;
     }
-
-    const targetDate = moment(eventDate).format("YYYY-MM-DD");
-
+    // EDIT -I SUCCESS EDIT II 
+    // const targetDate = moment(eventDate).format("YYYY-MM-DD");
     const getMinutes = (time: string) => {
         const [h, m] = time.split(":").map(Number);
         return h * 60 + m;
     };
+
 
     /* =========================
        2️⃣ DEFAULT SHIFT VALUES
@@ -54,6 +82,13 @@ export const updateAttendanceSummary = async (
     let overtimeLimitMinutes = 360; // default 6 hours
     let isNightShift = false;
 
+    // EDIT II
+    const baseDate = moment(eventDate).format("YYYY-MM-DD");
+    let targetDate = baseDate;
+
+    // EDIT III
+    const currentDate = moment(eventDate);
+    const prevDate = currentDate.clone().subtract(1, "day");
     /* =========================
        3️⃣ LOAD SCHEDULE & SHIFT
        ========================= */
@@ -69,21 +104,37 @@ export const updateAttendanceSummary = async (
 
     if (schedule?.data) {
         let staffShiftId: number | null = null;
+        // EDIT III
+        let shiftDate = currentDate.clone();
 
-        if (schedule.type === "week") {
-            const dayKey = moment(targetDate).format("ddd");
+        // 👉 Try current day first
+        let dayKey = currentDate.format("ddd");
+        staffShiftId = schedule.data[dayKey] ?? null;
+
+        // 👉 If no shift → try previous day (for night shift)
+        if (!staffShiftId) {
+            dayKey = prevDate.format("ddd");
             staffShiftId = schedule.data[dayKey] ?? null;
-        }
 
-        if (schedule.type === "month") {
-            const dayNo = moment(targetDate).date();
-            staffShiftId = schedule.data[`Day ${dayNo}`] ?? null;
+            if (staffShiftId) {
+                shiftDate = prevDate.clone(); // ✅ VERY IMPORTANT
+            }
         }
+        // EDIT II
+        // if (schedule.type === "week") {
+        //     const dayKey = moment(baseDate).format("ddd");
+        //     staffShiftId = schedule.data[dayKey] ?? null;
+        // }
+
+        // if (schedule.type === "month") {
+        //     const dayNo = moment(baseDate).date();
+        //     staffShiftId = schedule.data[`Day ${dayNo}`] ?? null;
+        // }
 
         console.log("Schedule record:", schedule);
         console.log("Schedule data:", schedule?.data);
-        console.log("Target date:", targetDate);
-        console.log("Day key:", moment(targetDate).format("ddd"));
+        console.log("Target date:", baseDate);
+        console.log("Day key:", moment(baseDate).format("ddd"));
         console.log("Selected shiftId:", staffShiftId);
 
 
@@ -107,9 +158,22 @@ export const updateAttendanceSummary = async (
                 const startM = getMinutes(shiftStart);
                 const endM = getMinutes(shiftEnd);
                 isNightShift = endM < startM;
+                const targetMoment = moment(eventDate);
+
+                const adjustedMoment =
+                    isNightShift && currentDate.hour() < 12
+                        ? shiftDate.clone()
+                        : shiftDate.clone();
+
+                targetDate = adjustedMoment.format("YYYY-MM-DD");
             }
+
         }
     }
+
+    // EDIT II
+
+
 
     /* =========================
        4️⃣ SHIFT DATETIMES
@@ -117,7 +181,7 @@ export const updateAttendanceSummary = async (
     const shiftStartDT = moment(`${targetDate} ${shiftStart}`);
     let shiftEndDT = moment(`${targetDate} ${shiftEnd}`);
 
-    if (isNightShift) {
+    if (isNightShift || shiftEndDT.isBefore(shiftStartDT)) {
         shiftEndDT.add(1, "day");
     }
 
@@ -128,7 +192,7 @@ export const updateAttendanceSummary = async (
     /* =========================
        5️⃣ PUNCH RANGE
        ========================= */
-    const startOfRange = shiftStartDT.clone().subtract(6, "hours").toDate();
+    const startOfRange = shiftStartDT.clone().subtract(12, "hours").toDate();
     const endOfRange = overtimeEndDT.toDate();
     const punches: any[] = await Punching.findAll({
         where: {
@@ -180,17 +244,22 @@ export const updateAttendanceSummary = async (
     //         workedMinutes += diff;
     //     else breakMinutes += diff;
     // }
-
-    const firstIn = punches[0];
+    //  EDIT II
+    const firstIn = punches.find(p =>
+        moment(p.eventDate).isSameOrAfter(shiftStartDT)
+    ) || punches[0];
 
 
 
     if (isLastPunchIn) {
         console.log("⚠️ Missing OUT punch detected");
-
+        // EDIT - I
         // Case 1: Last punch is before shift end → assume shift end
+        // if (lastOutDT.isBefore(shiftEndDT)) {
+        //     lastOutDT = shiftEndDT.clone();
+        // }
         if (lastOutDT.isBefore(shiftEndDT)) {
-            lastOutDT = shiftEndDT.clone();
+            console.log("⚠️ Early exit detected");
         }
 
         // Case 2: Last punch is after shift end → use actual punch
@@ -243,20 +312,30 @@ export const updateAttendanceSummary = async (
     if (firstInDT.isAfter(lateThresholdDT)) {
         lateMinutes = firstInDT.diff(lateThresholdDT, "minutes");
     }
-
+    //EDIT I - latest edit commented this and made last_out.eventDate to lastOutDT in output and added below line
     /* ===== Calculate overtime ===== */
-    if (lastOutDT.isAfter(shiftEndDT)) {
-        overtimeMinutes = lastOutDT.diff(shiftEndDT, "minutes");
-        overtimeMinutes = Math.min(overtimeMinutes, overtimeLimitMinutes);
-    }
-
-    /* ===== Shift duration ===== */
+    // if (lastOutDT.isAfter(shiftEndDT)) {
+    //     overtimeMinutes = lastOutDT.diff(shiftEndDT, "minutes");
+    //     overtimeMinutes = Math.min(overtimeMinutes, overtimeLimitMinutes);
+    // }
     const shiftDurationMinutes = shiftEndDT.diff(shiftStartDT, "minutes");
     const halfDayMinutes = shiftDurationMinutes / 2;
+    const extraWorkedMinutes = workedMinutes - shiftDurationMinutes;
+
+    if (extraWorkedMinutes > 0) {
+        overtimeMinutes = Math.min(extraWorkedMinutes, overtimeLimitMinutes);
+    } else {
+        overtimeMinutes = 0;
+    }
+
+    // /* ===== Shift duration ===== */
+    // const shiftDurationMinutes = shiftEndDT.diff(shiftStartDT, "minutes");
+    // const halfDayMinutes = shiftDurationMinutes / 2;
 
     /* ===== STATUS RULES ===== */
 
     if (isUnauthorized) {
+        overtimeMinutes = 0;
         status = "Unauthorized";
     } else if (workedMinutes === 0) {
         status = "Absent";
@@ -297,7 +376,7 @@ export const updateAttendanceSummary = async (
             shiftStart,
             shiftEnd,
             first_in: moment(firstIn.eventDate).format("HH:mm:ss"),
-            last_out: moment(lastOut.eventDate).format("HH:mm:ss"),
+            last_out: moment(lastOutDT).format("HH:mm:ss"),
             workedMinutes,
             breakMinutes,
             lateMinutes,
@@ -310,3 +389,4 @@ export const updateAttendanceSummary = async (
         }
     );
 };
+

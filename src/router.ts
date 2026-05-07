@@ -64,6 +64,8 @@ import { getSchedule } from "./Controller/ScheduleController/getSchedule.js";
 import { getScheduleById } from "./Controller/ScheduleController/getScheduleById.js";
 import { deleteSchedule } from "./Controller/ScheduleController/deleteSchedule.js";
 import { attendenceById } from "./Controller/StaffAttendenceController/AttendenceSummary/attendanceById.js";
+import { updatePunch } from "./Controller/StaffAttendenceController/AttendenceSummary/updatePunch.js";
+import { getAbsentStaffController } from "./Controller/StaffAttendenceController/AttendenceSummary/getAbsentStaff.js";
 
 export const setupRoutes = (hrModels: HRModels, uploadPath: string): Router => {
     const router = express.Router();
@@ -124,7 +126,10 @@ export const setupRoutes = (hrModels: HRModels, uploadPath: string): Router => {
     router.get("/staff_attendence_summary/monthly_report/:id", injectModels(monthlyReport));
     router.get("/attendence_status", injectModels(getAttendenceStatus));
     router.put("/unauthorized_attendence/:id", injectModels(updateUnauthorizedAttendence));
+    router.put("/update_punch/:id", injectModels(updatePunch));
     router.delete("/unauthorized_attendence/:id", injectModels(deleteUnauthorizedAttendence));
+    router.get("/absent_staff", validate(paginationQuerySchema), injectModels(getAbsentStaffController));
+
     //Departments
     router.get("/departments/:id", validate(paginationQuerySchema), injectModels(getDepartments));
     router.put("/departments/:id", validate(departmentIdSchema, 'params'), injectModels(updateDepartment));

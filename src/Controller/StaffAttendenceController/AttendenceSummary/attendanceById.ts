@@ -5,8 +5,8 @@ export const attendenceById = async (req: Request, res: Response, hrModels: HRMo
     try {
 
         const id = parseInt(req.params.id);
-
-        const attendence = await attendenceService.attendenceById(id, hrModels.AttendenceSummary);
+        const date = req.query.date || req.body.date;
+        const attendence = await attendenceService.attendenceById(id, date, hrModels.AttendenceSummary, hrModels.Punching);
         res.status(200).json(attendence);
     } catch (error) {
         res.status(500).json({
