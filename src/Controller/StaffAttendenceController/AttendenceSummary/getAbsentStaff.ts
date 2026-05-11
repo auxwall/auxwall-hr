@@ -15,7 +15,7 @@ export const getAbsentStaffController = async (
 
     try {
 
-        const { page, size, from, to } = req.query;
+        const { page, size, from, to, name } = req.query;
 
         // ✅ pagination
         const { limit, offset } = getPagination(page, size);
@@ -26,6 +26,7 @@ export const getAbsentStaffController = async (
             offset,
             from,
             to,
+            name,
             hrModels
         );
 
