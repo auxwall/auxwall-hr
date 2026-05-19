@@ -1,3 +1,394 @@
+// import { Op } from "sequelize";
+// import moment from "moment";
+// import { HRModels } from "../types.js";
+
+// export const updateAttendanceSummary = async (
+//     punchingRecord: any,
+//     hrModels: HRModels
+// ) => {
+//     const {
+//         Staff,
+//         Schedule,
+//         StaffShift,
+//         Punching,
+//         AttendenceSummary
+//     } = hrModels;
+//     console.log("🟢 updateAttendanceSummary started");
+//     console.log(punchingRecord);
+//     // const { staffId, eventDate } = punchingRecord;
+//     // const record = punchingRecord.dataValues || punchingRecord;
+//     // const { staffId, eventDate } = record;
+//     let record;
+
+//     if (Array.isArray(punchingRecord)) {
+
+//         if (punchingRecord.length === 0) {
+//             console.log("⛔ Empty punches array");
+//             return;
+//         }
+
+//         record =
+//             punchingRecord[0].dataValues ||
+//             punchingRecord[0];
+
+//     } else {
+
+//         record =
+//             punchingRecord.dataValues ||
+//             punchingRecord;
+//     }
+
+//     const { staffId, eventDate } = record;
+
+
+
+//     if (!staffId || !eventDate) {
+//         console.log("⛔ Missing staffId / eventDate", record);
+//         return;
+//     }
+//     let isUnauthorized = false;
+//     // if (!staffId || !eventDate) {
+//     //     console.log("⛔ Missing staffId / eventDate", punchingRecord);
+//     //     return;
+//     // }
+
+//     /* =========================
+//        1️⃣ STAFF
+//        ========================= */
+//     const staff: any = await Staff.findOne({
+//         where: { id: staffId },
+//         attributes: ["fullName", "shiftId", "scheduleId"],
+//         raw: true
+//     });
+
+//     if (!staff?.scheduleId) {
+//         console.log("⛔ Staff not found or no schedule assigned", staffId);
+//         return;
+//     }
+//     // EDIT -I SUCCESS EDIT II 
+//     // const targetDate = moment(eventDate).format("YYYY-MM-DD");
+//     const getMinutes = (time: string) => {
+//         const [h, m] = time.split(":").map(Number);
+//         return h * 60 + m;
+//     };
+
+
+//     /* =========================
+//        2️⃣ DEFAULT SHIFT VALUES
+//        ========================= */
+//     let shiftStart = "09:00";
+//     let shiftEnd = "18:00";
+//     let lateGraceMinutes = 0;
+//     let overtimeLimitMinutes = 360; // default 6 hours
+//     let isNightShift = false;
+
+//     // EDIT II
+//     const baseDate = moment(eventDate).format("YYYY-MM-DD");
+//     let targetDate = baseDate;
+
+//     // EDIT III
+//     const currentDate = moment(eventDate);
+//     const prevDate = currentDate.clone().subtract(1, "day");
+//     /* =========================
+//        3️⃣ LOAD SCHEDULE & SHIFT
+//        ========================= */
+//     // const schedule: any = await Schedule.findOne({
+//     //     where: { id: staff.shiftId },
+//     //     raw: true
+//     // });
+//     const schedule: any = await Schedule.findOne({
+//         where: { id: staff.scheduleId },
+//         raw: true
+//     });
+//     console.log("schedule");
+
+//     if (schedule?.data) {
+//         let staffShiftId: number | null = null;
+//         // EDIT III
+//         let shiftDate = currentDate.clone();
+
+//         // 👉 Try current day first
+//         let dayKey = currentDate.format("ddd");
+//         staffShiftId = schedule.data[dayKey] ?? null;
+
+//         // 👉 If no shift → try previous day (for night shift)
+//         if (!staffShiftId) {
+//             dayKey = prevDate.format("ddd");
+//             staffShiftId = schedule.data[dayKey] ?? null;
+
+//             if (staffShiftId) {
+//                 shiftDate = prevDate.clone(); // ✅ VERY IMPORTANT
+//             }
+//         }
+//         // EDIT II
+//         // if (schedule.type === "week") {
+//         //     const dayKey = moment(baseDate).format("ddd");
+//         //     staffShiftId = schedule.data[dayKey] ?? null;
+//         // }
+
+//         // if (schedule.type === "month") {
+//         //     const dayNo = moment(baseDate).date();
+//         //     staffShiftId = schedule.data[`Day ${dayNo}`] ?? null;
+//         // }
+
+//         console.log("Schedule record:", schedule);
+//         console.log("Schedule data:", schedule?.data);
+//         console.log("Target date:", baseDate);
+//         console.log("Day key:", moment(baseDate).format("ddd"));
+//         console.log("Selected shiftId:", staffShiftId);
+
+
+//         if (staffShiftId) {
+//             const shift: any = await StaffShift.findByPk(staffShiftId, {
+//                 raw: true
+//             });
+//             console.log("Loaded shift:", shift);
+
+//             if (shift) {
+//                 shiftStart = shift.shiftStart;
+//                 shiftEnd = shift.shiftEnd;
+//                 lateGraceMinutes = shift.lateGraceMinutes || 0;
+
+//                 overtimeLimitMinutes =
+//                     shift.overtimeMinutes !== null &&
+//                         shift.overtimeMinutes !== undefined
+//                         ? shift.overtimeMinutes
+//                         : 360;
+
+//                 const startM = getMinutes(shiftStart);
+//                 const endM = getMinutes(shiftEnd);
+//                 isNightShift = endM < startM;
+//                 const targetMoment = moment(eventDate);
+
+//                 const adjustedMoment =
+//                     isNightShift && currentDate.hour() < 12
+//                         ? shiftDate.clone()
+//                         : shiftDate.clone();
+
+//                 targetDate = adjustedMoment.format("YYYY-MM-DD");
+//             }
+
+//         }
+//     }
+
+//     // EDIT II
+
+
+
+//     /* =========================
+//        4️⃣ SHIFT DATETIMES
+//        ========================= */
+//     const shiftStartDT = moment(`${targetDate} ${shiftStart}`);
+//     let shiftEndDT = moment(`${targetDate} ${shiftEnd}`);
+
+//     if (isNightShift || shiftEndDT.isBefore(shiftStartDT)) {
+//         shiftEndDT.add(1, "day");
+//     }
+
+//     const overtimeEndDT = shiftEndDT
+//         .clone()
+//         .add(overtimeLimitMinutes, "minutes");
+
+//     /* =========================
+//        5️⃣ PUNCH RANGE
+//        ========================= */
+//     const startOfRange = shiftStartDT.clone().subtract(12, "hours").toDate();
+//     const endOfRange = overtimeEndDT.toDate();
+//     const punches: any[] = await Punching.findAll({
+//         where: {
+//             staffId,
+//             eventDate: { [Op.between]: [startOfRange, endOfRange] }
+//         },
+//         order: [["eventDate", "ASC"]],
+//         raw: true
+//     });
+
+//     if (!punches.length) {
+//         await AttendenceSummary.upsert(
+//             {
+//                 staffId,
+//                 staffName: staff.fullName,
+//                 attendenceDate: targetDate,
+//                 shiftStart,
+//                 shiftEnd,
+//                 status: "Absent"
+//             },
+//             {
+//                 conflictFields: ["staff_id", "attendence_date"]
+//             }
+//         );
+//         return;
+//     }
+
+//     /* =========================
+//        6️⃣ ASSIGN IN / OUT
+//        ========================= */
+//     punches.forEach((p, i) => {
+//         p.punchingType = i % 2 === 0 ? "In" : "Out";
+//     });
+
+//     const isLastPunchIn = punches.length % 2 !== 0;
+//     let lastOut = punches[punches.length - 1];
+//     let lastOutDT = moment(lastOut.eventDate);
+//     /* =========================
+//        7️⃣ WORK & BREAK TIME
+//        ========================= */
+
+//     // for (let i = 0; i < punches.length - 1; i++) {
+//     //     const diff = moment(punches[i + 1].eventDate).diff(
+//     //         moment(punches[i].eventDate),
+//     //         "minutes"
+//     //     );
+
+//     //     if (punches[i].punchingType === "In")
+//     //         workedMinutes += diff;
+//     //     else breakMinutes += diff;
+//     // }
+//     //  EDIT II
+//     const firstIn = punches.find(p =>
+//         moment(p.eventDate).isSameOrAfter(shiftStartDT)
+//     ) || punches[0];
+
+
+
+//     if (isLastPunchIn) {
+//         console.log("⚠️ Missing OUT punch detected");
+//         // EDIT - I
+//         // Case 1: Last punch is before shift end → assume shift end
+//         // if (lastOutDT.isBefore(shiftEndDT)) {
+//         //     lastOutDT = shiftEndDT.clone();
+//         // }
+//         if (lastOutDT.isBefore(shiftEndDT)) {
+//             console.log("⚠️ Early exit detected");
+//         }
+
+//         // Case 2: Last punch is after shift end → use actual punch
+//         else {
+//             lastOutDT = moment(lastOut.eventDate);
+//             isUnauthorized = true;
+//         }
+
+//     }
+
+//     let workedMinutes = 0;
+//     let breakMinutes = 0;
+
+//     for (let i = 0; i < punches.length; i++) {
+//         const current = punches[i];
+//         const next = punches[i + 1];
+
+//         const currentDT = moment(current.eventDate);
+
+//         let endDT;
+
+//         if (next) {
+//             endDT = moment(next.eventDate);
+//         } else if (isLastPunchIn) {
+//             // handle missing OUT
+//             endDT = lastOutDT;
+//         } else {
+//             continue;
+//         }
+
+//         const diff = endDT.diff(currentDT, "minutes");
+
+//         if (current.punchingType === "In") {
+//             workedMinutes += diff;
+//         } else {
+//             breakMinutes += diff;
+//         }
+//     }
+
+
+//     let status = "Absent";
+//     let lateMinutes = 0;
+//     let overtimeMinutes = 0;
+
+//     const firstInDT = moment(firstIn.eventDate);
+//     // const lastOutDT = moment(lastOut.eventDate);
+
+//     const lateThresholdDT = shiftStartDT.clone().add(lateGraceMinutes, "minutes");
+
+//     if (firstInDT.isAfter(lateThresholdDT)) {
+//         lateMinutes = firstInDT.diff(lateThresholdDT, "minutes");
+//     }
+//     //EDIT I - latest edit commented this and made last_out.eventDate to lastOutDT in output and added below line
+//     /* ===== Calculate overtime ===== */
+//     // if (lastOutDT.isAfter(shiftEndDT)) {
+//     //     overtimeMinutes = lastOutDT.diff(shiftEndDT, "minutes");
+//     //     overtimeMinutes = Math.min(overtimeMinutes, overtimeLimitMinutes);
+//     // }
+//     const shiftDurationMinutes = shiftEndDT.diff(shiftStartDT, "minutes");
+//     const halfDayMinutes = shiftDurationMinutes / 2;
+//     const extraWorkedMinutes = workedMinutes - shiftDurationMinutes;
+
+//     if (extraWorkedMinutes > 0) {
+//         overtimeMinutes = Math.min(extraWorkedMinutes, overtimeLimitMinutes);
+//     } else {
+//         overtimeMinutes = 0;
+//     }
+
+//     // /* ===== Shift duration ===== */
+//     // const shiftDurationMinutes = shiftEndDT.diff(shiftStartDT, "minutes");
+//     // const halfDayMinutes = shiftDurationMinutes / 2;
+
+//     /* ===== STATUS RULES ===== */
+
+//     if (isUnauthorized) {
+//         overtimeMinutes = 0;
+//         status = "Unauthorized";
+//     } else if (workedMinutes === 0) {
+//         status = "Absent";
+//     }
+//     else if (workedMinutes < halfDayMinutes) {
+//         status = "Half Day";
+//     }
+//     else if (lateMinutes > 0) {
+//         status = "Late";
+//     }
+//     else {
+//         status = "Present";
+//     }
+//     console.log("✅ Summary data:", {
+//         staffId,
+//         staffName: staff.fullName,
+//         attendenceDate: targetDate,
+//         shiftStart,
+//         shiftEnd,
+//         first_in: moment(firstIn.eventDate).format("HH:mm:ss"),
+//         last_out: moment(lastOutDT).format("HH:mm:ss"),
+//         workedMinutes,
+//         breakMinutes,
+//         lateMinutes,
+//         overtimeMinutes,
+//         totalPunches: punches.length,
+//         status
+//     });
+
+//     /* =========================
+//        9️⃣ UPSERT SUMMARY
+//        ========================= */
+//     await AttendenceSummary.upsert(
+//         {
+//             staffId,
+//             staffName: staff.fullName,
+//             attendenceDate: targetDate,
+//             shiftStart,
+//             shiftEnd,
+//             first_in: moment(firstIn.eventDate).format("HH:mm:ss"),
+//             last_out: moment(lastOutDT).format("HH:mm:ss"),
+//             workedMinutes,
+//             breakMinutes,
+//             lateMinutes,
+//             overtimeMinutes,
+//             totalPunches: punches.length,
+//             status
+//         },
+//         {
+//             conflictFields: ["staff_id", "attendence_date"]
+//         }
+//     );
+// };
 import { Op } from "sequelize";
 import moment from "moment";
 import { HRModels } from "../types.js";
@@ -6,6 +397,7 @@ export const updateAttendanceSummary = async (
     punchingRecord: any,
     hrModels: HRModels
 ) => {
+
     const {
         Staff,
         Schedule,
@@ -13,11 +405,14 @@ export const updateAttendanceSummary = async (
         Punching,
         AttendenceSummary
     } = hrModels;
+
     console.log("🟢 updateAttendanceSummary started");
     console.log(punchingRecord);
-    // const { staffId, eventDate } = punchingRecord;
-    // const record = punchingRecord.dataValues || punchingRecord;
-    // const { staffId, eventDate } = record;
+
+    /* =====================================================
+       1️⃣ NORMALIZE INPUT RECORD
+    ===================================================== */
+
     let record;
 
     if (Array.isArray(punchingRecord)) {
@@ -40,21 +435,15 @@ export const updateAttendanceSummary = async (
 
     const { staffId, eventDate } = record;
 
-
-
     if (!staffId || !eventDate) {
         console.log("⛔ Missing staffId / eventDate", record);
         return;
     }
-    let isUnauthorized = false;
-    // if (!staffId || !eventDate) {
-    //     console.log("⛔ Missing staffId / eventDate", punchingRecord);
-    //     return;
-    // }
 
-    /* =========================
-       1️⃣ STAFF
-       ========================= */
+    /* =====================================================
+       2️⃣ LOAD STAFF
+    ===================================================== */
+
     const staff: any = await Staff.findOne({
         where: { id: staffId },
         attributes: ["fullName", "shiftId", "scheduleId"],
@@ -65,89 +454,98 @@ export const updateAttendanceSummary = async (
         console.log("⛔ Staff not found or no schedule assigned", staffId);
         return;
     }
-    // EDIT -I SUCCESS EDIT II 
-    // const targetDate = moment(eventDate).format("YYYY-MM-DD");
+
+    /* =====================================================
+       3️⃣ DEFAULT SHIFT VALUES
+    ===================================================== */
+
     const getMinutes = (time: string) => {
         const [h, m] = time.split(":").map(Number);
         return h * 60 + m;
     };
 
-
-    /* =========================
-       2️⃣ DEFAULT SHIFT VALUES
-       ========================= */
     let shiftStart = "09:00";
     let shiftEnd = "18:00";
     let lateGraceMinutes = 0;
-    let overtimeLimitMinutes = 360; // default 6 hours
+    let overtimeLimitMinutes = 360;
     let isNightShift = false;
 
-    // EDIT II
     const baseDate = moment(eventDate).format("YYYY-MM-DD");
     let targetDate = baseDate;
 
-    // EDIT III
     const currentDate = moment(eventDate);
     const prevDate = currentDate.clone().subtract(1, "day");
-    /* =========================
-       3️⃣ LOAD SCHEDULE & SHIFT
-       ========================= */
-    // const schedule: any = await Schedule.findOne({
-    //     where: { id: staff.shiftId },
-    //     raw: true
-    // });
+
+    /* =====================================================
+       4️⃣ LOAD SCHEDULE
+    ===================================================== */
+
     const schedule: any = await Schedule.findOne({
         where: { id: staff.scheduleId },
         raw: true
     });
+
     console.log("schedule");
 
     if (schedule?.data) {
+
         let staffShiftId: number | null = null;
-        // EDIT III
         let shiftDate = currentDate.clone();
 
-        // 👉 Try current day first
-        let dayKey = currentDate.format("ddd");
-        staffShiftId = schedule.data[dayKey] ?? null;
+        // ✅ WEEK SCHEDULE
+        if (schedule.type === "week") {
 
-        // 👉 If no shift → try previous day (for night shift)
-        if (!staffShiftId) {
-            dayKey = prevDate.format("ddd");
+            let dayKey = currentDate.format("ddd");
+
             staffShiftId = schedule.data[dayKey] ?? null;
 
-            if (staffShiftId) {
-                shiftDate = prevDate.clone(); // ✅ VERY IMPORTANT
+            // try previous day for night shift support
+            if (!staffShiftId) {
+
+                dayKey = prevDate.format("ddd");
+
+                staffShiftId = schedule.data[dayKey] ?? null;
+
+                if (staffShiftId) {
+                    shiftDate = prevDate.clone();
+                }
             }
         }
-        // EDIT II
-        // if (schedule.type === "week") {
-        //     const dayKey = moment(baseDate).format("ddd");
-        //     staffShiftId = schedule.data[dayKey] ?? null;
-        // }
 
-        // if (schedule.type === "month") {
-        //     const dayNo = moment(baseDate).date();
-        //     staffShiftId = schedule.data[`Day ${dayNo}`] ?? null;
-        // }
+        // ✅ MONTH SCHEDULE
+        else if (schedule.type === "month") {
+
+            const dayNo = currentDate.date();
+
+            staffShiftId =
+                schedule.data[`Day ${dayNo}`] ?? null;
+        }
 
         console.log("Schedule record:", schedule);
         console.log("Schedule data:", schedule?.data);
         console.log("Target date:", baseDate);
-        console.log("Day key:", moment(baseDate).format("ddd"));
         console.log("Selected shiftId:", staffShiftId);
 
+        /* =====================================================
+           5️⃣ LOAD SHIFT
+        ===================================================== */
 
         if (staffShiftId) {
-            const shift: any = await StaffShift.findByPk(staffShiftId, {
-                raw: true
-            });
+
+            const shift: any = await StaffShift.findByPk(
+                staffShiftId,
+                { raw: true }
+            );
+
             console.log("Loaded shift:", shift);
 
             if (shift) {
+
                 shiftStart = shift.shiftStart;
                 shiftEnd = shift.shiftEnd;
-                lateGraceMinutes = shift.lateGraceMinutes || 0;
+
+                lateGraceMinutes =
+                    shift.lateGraceMinutes || 0;
 
                 overtimeLimitMinutes =
                     shift.overtimeMinutes !== null &&
@@ -157,31 +555,31 @@ export const updateAttendanceSummary = async (
 
                 const startM = getMinutes(shiftStart);
                 const endM = getMinutes(shiftEnd);
+
                 isNightShift = endM < startM;
-                const targetMoment = moment(eventDate);
 
-                const adjustedMoment =
-                    isNightShift && currentDate.hour() < 12
-                        ? shiftDate.clone()
-                        : shiftDate.clone();
-
-                targetDate = adjustedMoment.format("YYYY-MM-DD");
+                targetDate = shiftDate.format("YYYY-MM-DD");
             }
-
         }
     }
 
-    // EDIT II
+    /* =====================================================
+       6️⃣ SHIFT DATETIME
+    ===================================================== */
 
+    const shiftStartDT = moment(
+        `${targetDate} ${shiftStart}`
+    );
 
+    let shiftEndDT = moment(
+        `${targetDate} ${shiftEnd}`
+    );
 
-    /* =========================
-       4️⃣ SHIFT DATETIMES
-       ========================= */
-    const shiftStartDT = moment(`${targetDate} ${shiftStart}`);
-    let shiftEndDT = moment(`${targetDate} ${shiftEnd}`);
-
-    if (isNightShift || shiftEndDT.isBefore(shiftStartDT)) {
+    // night shift support
+    if (
+        isNightShift ||
+        shiftEndDT.isBefore(shiftStartDT)
+    ) {
         shiftEndDT.add(1, "day");
     }
 
@@ -189,21 +587,42 @@ export const updateAttendanceSummary = async (
         .clone()
         .add(overtimeLimitMinutes, "minutes");
 
-    /* =========================
-       5️⃣ PUNCH RANGE
-       ========================= */
-    const startOfRange = shiftStartDT.clone().subtract(12, "hours").toDate();
+    /* =====================================================
+       7️⃣ FETCH PUNCHES
+    ===================================================== */
+
+    // const startOfRange = shiftStartDT
+    // .clone()
+    // .subtract(12, "hours")
+    // .toDate();
+    const startOfRange = isNightShift
+        ? shiftStartDT.clone().subtract(12, "hours").toDate()
+        : shiftStartDT.clone().startOf("day").toDate();
+
     const endOfRange = overtimeEndDT.toDate();
+
     const punches: any[] = await Punching.findAll({
         where: {
             staffId,
-            eventDate: { [Op.between]: [startOfRange, endOfRange] }
+            eventDate: {
+                [Op.between]: [
+                    startOfRange,
+                    endOfRange
+                ]
+            }
         },
         order: [["eventDate", "ASC"]],
         raw: true
     });
 
+    console.log("Fetched punches:", punches);
+
+    /* =====================================================
+       8️⃣ NO PUNCHES
+    ===================================================== */
+
     if (!punches.length) {
+
         await AttendenceSummary.upsert(
             {
                 staffId,
@@ -214,83 +633,71 @@ export const updateAttendanceSummary = async (
                 status: "Absent"
             },
             {
-                conflictFields: ["staff_id", "attendence_date"]
+                conflictFields: [
+                    "staff_id",
+                    "attendence_date"
+                ]
             }
         );
+
         return;
     }
 
-    /* =========================
-       6️⃣ ASSIGN IN / OUT
-       ========================= */
+    /* =====================================================
+       9️⃣ ASSIGN IN / OUT
+    ===================================================== */
+
     punches.forEach((p, i) => {
-        p.punchingType = i % 2 === 0 ? "In" : "Out";
+
+        p.punchingType =
+            i % 2 === 0
+                ? "In"
+                : "Out";
     });
 
-    const isLastPunchIn = punches.length % 2 !== 0;
-    let lastOut = punches[punches.length - 1];
-    let lastOutDT = moment(lastOut.eventDate);
-    /* =========================
-       7️⃣ WORK & BREAK TIME
-       ========================= */
+    console.log("Punches after type assign:", punches);
 
-    // for (let i = 0; i < punches.length - 1; i++) {
-    //     const diff = moment(punches[i + 1].eventDate).diff(
-    //         moment(punches[i].eventDate),
-    //         "minutes"
-    //     );
+    /* =====================================================
+       🔟 FIRST IN & LAST OUT
+    ===================================================== */
 
-    //     if (punches[i].punchingType === "In")
-    //         workedMinutes += diff;
-    //     else breakMinutes += diff;
-    // }
-    //  EDIT II
-    const firstIn = punches.find(p =>
-        moment(p.eventDate).isSameOrAfter(shiftStartDT)
-    ) || punches[0];
+    const firstIn =
+        punches.find(p =>
+            moment(p.eventDate)
+                .isSameOrAfter(shiftStartDT)
+        ) || punches[0];
 
+    const lastPunch =
+        punches[punches.length - 1];
 
+    let lastOutDT =
+        moment(lastPunch.eventDate);
 
-    if (isLastPunchIn) {
-        console.log("⚠️ Missing OUT punch detected");
-        // EDIT - I
-        // Case 1: Last punch is before shift end → assume shift end
-        // if (lastOutDT.isBefore(shiftEndDT)) {
-        //     lastOutDT = shiftEndDT.clone();
-        // }
-        if (lastOutDT.isBefore(shiftEndDT)) {
-            console.log("⚠️ Early exit detected");
-        }
-
-        // Case 2: Last punch is after shift end → use actual punch
-        else {
-            lastOutDT = moment(lastOut.eventDate);
-            isUnauthorized = true;
-        }
-
-    }
+    /* =====================================================
+       1️⃣1️⃣ WORK & BREAK TIME
+    ===================================================== */
 
     let workedMinutes = 0;
     let breakMinutes = 0;
 
-    for (let i = 0; i < punches.length; i++) {
+    for (let i = 0; i < punches.length - 1; i++) {
+
         const current = punches[i];
         const next = punches[i + 1];
 
-        const currentDT = moment(current.eventDate);
+        const currentDT =
+            moment(current.eventDate);
 
-        let endDT;
+        const nextDT =
+            moment(next.eventDate);
 
-        if (next) {
-            endDT = moment(next.eventDate);
-        } else if (isLastPunchIn) {
-            // handle missing OUT
-            endDT = lastOutDT;
-        } else {
+        const diff =
+            nextDT.diff(currentDT, "minutes");
+
+        // safety check
+        if (diff <= 0 || diff > 1440) {
             continue;
         }
-
-        const diff = endDT.diff(currentDT, "minutes");
 
         if (current.punchingType === "In") {
             workedMinutes += diff;
@@ -299,94 +706,195 @@ export const updateAttendanceSummary = async (
         }
     }
 
+    /* =====================================================
+       1️⃣2️⃣ LATE CALCULATION
+    ===================================================== */
 
-    let status = "Absent";
     let lateMinutes = 0;
-    let overtimeMinutes = 0;
 
-    const firstInDT = moment(firstIn.eventDate);
-    // const lastOutDT = moment(lastOut.eventDate);
+    const firstInDT =
+        moment(firstIn.eventDate);
 
-    const lateThresholdDT = shiftStartDT.clone().add(lateGraceMinutes, "minutes");
+    const lateThresholdDT =
+        shiftStartDT
+            .clone()
+            .add(lateGraceMinutes, "minutes");
 
     if (firstInDT.isAfter(lateThresholdDT)) {
-        lateMinutes = firstInDT.diff(lateThresholdDT, "minutes");
+
+        lateMinutes =
+            firstInDT.diff(
+                lateThresholdDT,
+                "minutes"
+            );
     }
-    //EDIT I - latest edit commented this and made last_out.eventDate to lastOutDT in output and added below line
-    /* ===== Calculate overtime ===== */
-    // if (lastOutDT.isAfter(shiftEndDT)) {
-    //     overtimeMinutes = lastOutDT.diff(shiftEndDT, "minutes");
-    //     overtimeMinutes = Math.min(overtimeMinutes, overtimeLimitMinutes);
-    // }
-    const shiftDurationMinutes = shiftEndDT.diff(shiftStartDT, "minutes");
-    const halfDayMinutes = shiftDurationMinutes / 2;
-    const extraWorkedMinutes = workedMinutes - shiftDurationMinutes;
+
+    /* =====================================================
+       1️⃣3️⃣ OVERTIME CALCULATION
+    ===================================================== */
+
+    let overtimeMinutes = 0;
+
+    const shiftDurationMinutes =
+        shiftEndDT.diff(
+            shiftStartDT,
+            "minutes"
+        );
+
+    const extraWorkedMinutes =
+        workedMinutes -
+        shiftDurationMinutes;
 
     if (extraWorkedMinutes > 0) {
-        overtimeMinutes = Math.min(extraWorkedMinutes, overtimeLimitMinutes);
-    } else {
-        overtimeMinutes = 0;
+
+        overtimeMinutes =
+            Math.min(
+                extraWorkedMinutes,
+                overtimeLimitMinutes
+            );
     }
 
-    // /* ===== Shift duration ===== */
-    // const shiftDurationMinutes = shiftEndDT.diff(shiftStartDT, "minutes");
-    // const halfDayMinutes = shiftDurationMinutes / 2;
+    /* =====================================================
+       1️⃣4️⃣ UNAUTHORIZED CHECK
+    ===================================================== */
 
-    /* ===== STATUS RULES ===== */
+    let isUnauthorized = false;
+
+    // only one punch
+    if (punches.length % 2 !== 0) {
+        isUnauthorized = true;
+    }
+
+    // punch beyond allowed overtime window
+    // const invalidPunchWindow =
+    //     punches.some(p =>
+    //         moment(p.eventDate).isAfter(
+    //             overtimeEndDT.clone()
+    //                 .add(6, "hours")
+    //         )
+    //     );
+
+    // if (invalidPunchWindow) {
+    //     isUnauthorized = true;
+    // }
+
+    /* =====================================================
+       1️⃣5️⃣ STATUS LOGIC
+    ===================================================== */
+
+    let status = "Absent";
+
+    const halfDayMinutes =
+        shiftDurationMinutes / 2;
 
     if (isUnauthorized) {
-        overtimeMinutes = 0;
+
         status = "Unauthorized";
-    } else if (workedMinutes === 0) {
+        overtimeMinutes = 0;
+    }
+
+    else if (workedMinutes === 0) {
+
         status = "Absent";
     }
-    else if (workedMinutes < halfDayMinutes) {
+
+    else if (
+        workedMinutes < halfDayMinutes
+    ) {
+
         status = "Half Day";
     }
+
     else if (lateMinutes > 0) {
+
         status = "Late";
     }
+
     else {
+
         status = "Present";
     }
+
+    /* =====================================================
+       1️⃣6️⃣ FINAL LOG
+    ===================================================== */
+
     console.log("✅ Summary data:", {
+
         staffId,
+
         staffName: staff.fullName,
+
         attendenceDate: targetDate,
+
         shiftStart,
+
         shiftEnd,
-        first_in: moment(firstIn.eventDate).format("HH:mm:ss"),
-        last_out: moment(lastOutDT).format("HH:mm:ss"),
+
+        first_in:
+            moment(firstIn.eventDate)
+                .format("HH:mm:ss"),
+
+        last_out:
+            moment(lastOutDT)
+                .format("HH:mm:ss"),
+
         workedMinutes,
+
         breakMinutes,
+
         lateMinutes,
+
         overtimeMinutes,
+
         totalPunches: punches.length,
+
         status
     });
 
-    /* =========================
-       9️⃣ UPSERT SUMMARY
-       ========================= */
+    /* =====================================================
+       1️⃣7️⃣ UPSERT SUMMARY
+    ===================================================== */
+
     await AttendenceSummary.upsert(
         {
             staffId,
+
             staffName: staff.fullName,
+
             attendenceDate: targetDate,
+
             shiftStart,
+
             shiftEnd,
-            first_in: moment(firstIn.eventDate).format("HH:mm:ss"),
-            last_out: moment(lastOutDT).format("HH:mm:ss"),
+
+            first_in:
+                moment(firstIn.eventDate)
+                    .format("HH:mm:ss"),
+
+            last_out:
+                moment(lastOutDT)
+                    .format("HH:mm:ss"),
+
             workedMinutes,
+
             breakMinutes,
+
             lateMinutes,
+
             overtimeMinutes,
+
             totalPunches: punches.length,
+
             status
         },
         {
-            conflictFields: ["staff_id", "attendence_date"]
+            conflictFields: [
+                "staff_id",
+                "attendence_date"
+            ]
         }
     );
-};
 
+    console.log("✅ Attendance summary updated");
+};

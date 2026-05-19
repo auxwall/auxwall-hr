@@ -35,7 +35,8 @@ export const defineDepartment = (sequelize) => {
             }
         },
         {
-            tableName: "hr_departments"
+            tableName: "hr_departments",
+            timestamps: true
         }
     );
 

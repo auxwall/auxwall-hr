@@ -67,6 +67,12 @@ import { attendenceById } from "./Controller/StaffAttendenceController/Attendenc
 import { updatePunch } from "./Controller/StaffAttendenceController/AttendenceSummary/updatePunch.js";
 import { getAbsentStaffController } from "./Controller/StaffAttendenceController/AttendenceSummary/getAbsentStaff.js";
 
+import { viewAllotedShifts } from "./Controller/StaffAttendenceController/ShiftAllotment/viewAllotedShifts.js";
+import { viewShiftByIdController } from "./Controller/StaffAttendenceController/ShiftAllotment/viewShiftById.js";
+import { allotShift } from "./Controller/StaffAttendenceController/ShiftAllotment/allotShift.js";
+
+import { updateScheduleController } from "./Controller/ScheduleController/updateSchedule.js";
+
 export const setupRoutes = (hrModels: HRModels, uploadPath: string): Router => {
     const router = express.Router();
     const upload = createUploadMiddleware(uploadPath);
@@ -75,6 +81,9 @@ export const setupRoutes = (hrModels: HRModels, uploadPath: string): Router => {
     const injectContext = (controller: Function) => (req: Request, res: Response, next: NextFunction) => controller(req, res, hrModels, uploadPath);
 
     router.get("/", (req: Request, res: Response) => {
+        res.send("Auxwall HR Module API running...!");
+    });
+    router.get("", (req, res) => {
         res.send("Auxwall HR Module API running...!");
     });
 
@@ -113,6 +122,11 @@ export const setupRoutes = (hrModels: HRModels, uploadPath: string): Router => {
     router.post("/staff_attendence", injectModels(markPunches));
     router.get("/staff_attendence/:id", validate(paginationQuerySchema), injectModels(getPunchingDetails));
 
+    //Shift Allotment
+    router.get("/shift_allotment/:id", injectModels(viewAllotedShifts));
+    router.get("/shift_allotment/view/:id", injectModels(viewShiftByIdController));
+    router.put("/shift_allotment/update/:id", injectModels(allotShift));
+
     //Staff Shifts
     router.post("/staff_shifts", validate(shiftBodySchema), injectModels(createShift));
     router.get("/staff_shifts/:id", validate(paginationQuerySchema), injectModels(viewShifts));
@@ -144,6 +158,7 @@ export const setupRoutes = (hrModels: HRModels, uploadPath: string): Router => {
     router.get("/schedules/:id", injectModels(getSchedule));
     router.get("/schedule/:id", injectModels(getScheduleById));
     router.delete("/schedule/:id", injectModels(deleteSchedule));
+    router.put("/schedule/:id", injectModels(updateScheduleController));
     // router.put("/departments/:id", validate(departmentIdSchema, 'params'), validate(updateDepartmentSchema), injectModels(updateDepartment));
     // router.delete("/departments/:id", validate(departmentIdSchema, 'params'), injectModels(deleteDepartment));
 

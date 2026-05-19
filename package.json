@@ -22,7 +22,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "rimraf dist && tsc",
     "dev": "tsc -w",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "start": "node dist/app.js"
   },
   "keywords": [
     "hr",
@@ -46,7 +47,7 @@
   "devDependencies": {
     "@types/express": "^5.0.6",
     "@types/multer": "^2.0.0",
-    "@types/node": "^25.0.3",
+    "@types/node": "^25.7.0",
     "@types/node-cron": "^3.0.11",
     "@types/pg": "^8.16.0",
     "@types/sequelize": "^4.28.20",
