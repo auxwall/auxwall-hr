@@ -8,6 +8,7 @@ import { Sequelize } from "sequelize";
 import { UserModels, HRModels } from "../types.js";
 import defineCronLog from "./cronLog.model.js";
 import { defineSchedule } from "./Schedule.js";
+import { defineDevice } from "./Devices.js";
 
 export const initModels = (sequelize: Sequelize, userModels: UserModels): HRModels => {
     const { Staff, Company, Punching, CompanyUserRelation } = userModels;
@@ -21,6 +22,7 @@ export const initModels = (sequelize: Sequelize, userModels: UserModels): HRMode
     const Department = defineDepartment(sequelize);
     const CronLog = defineCronLog(sequelize);
     const Schedule = defineSchedule(sequelize);
+    const Device = defineDevice(sequelize);
 
     // 2. Setup Foreign Key Associations
 
@@ -37,6 +39,13 @@ export const initModels = (sequelize: Sequelize, userModels: UserModels): HRMode
     Staff.belongsTo(Department, { foreignKey: "departmentId", as: "department" });
     // Staff.belongsToMany(Company, { through: CompanyUserRelation, foreignKey: "userId" })
     // Staff.belongsTo(Staff, { foreignKey: 'createdBy', as: 'creator' })
+    // Staff -> Shift
+    Staff.belongsTo(StaffShift, { foreignKey: "shiftId", as: "shift" });
+
+    // Staff -> Schedule
+    Staff.belongsTo(Schedule, { foreignKey: "scheduleId", as: "schedule" });
+    Staff.hasMany(Device, { foreignKey: "createdBy", as: "devices" });
+
 
     Company.belongsToMany(Staff, { through: CompanyUserRelation, foreignKey: "companyId" })
     // --- Category Links ---
@@ -52,6 +61,16 @@ export const initModels = (sequelize: Sequelize, userModels: UserModels): HRMode
     // --- StaffShift Links ---
     StaffShift.belongsTo(Staff, { foreignKey: "uploadedBy", as: "uploader" });
     StaffShift.belongsTo(Department, { foreignKey: 'departmentId', as: 'department' });
+    StaffShift.hasMany(Schedule, {
+        foreignKey: "shiftId",
+        as: "schedules"
+    });
+
+    Schedule.belongsTo(StaffShift, {
+        foreignKey: "shiftId",
+        as: "shift"
+    });
+    // Shift -> Department
 
     // --- AttendenceSummary Links ---
     AttendenceSummary.belongsTo(Staff, { foreignKey: "staffId", as: "staff" });
@@ -65,11 +84,12 @@ export const initModels = (sequelize: Sequelize, userModels: UserModels): HRMode
     Department.belongsTo(Staff, { foreignKey: "createdBy", as: "creator" });
     Department.hasMany(Staff, { foreignKey: "departmentId", as: "staffs" });
 
-
+    Device.belongsTo(Staff, { foreignKey: "createdBy", as: "creator" });
+    Device.belongsTo(Company, { foreignKey: "companyId" });
 
     // --- Company Links ---
     Company.hasMany(Department, { foreignKey: "companyId" });
     // Company.belongsToMany(Staff, { through: CompanyUserRelation, foreignKey: "companyId" })
 
-    return { Document, Category, Activity, Staff, CompanyUserRelation, Company, StaffShift, AttendenceSummary, Punching, Department, CronLog, Schedule };
+    return { Document, Category, Activity, Staff, CompanyUserRelation, Company, StaffShift, AttendenceSummary, Punching, Department, CronLog, Schedule, Device };
 };

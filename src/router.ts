@@ -40,11 +40,15 @@ import { getCategoryTree } from "./Controller/DashboardController/getCategoryTre
 import { getPunchingDetails } from "./Controller/StaffAttendenceController/PunchingController/getPunchingDetails.js";
 import { markPunches } from "./Controller/StaffAttendenceController/PunchingController/markPunches.js";
 
+import { viewAllotedShifts } from "./Controller/StaffAttendenceController/ShiftAllotment/viewAllotedShifts.js";
+import { viewShiftByIdController } from "./Controller/StaffAttendenceController/ShiftAllotment/viewShiftById.js";
+
 import { createShift } from "./Controller/StaffAttendenceController/StaffShiftsController/createShift.js";
 import { viewShifts } from "./Controller/StaffAttendenceController/StaffShiftsController/viewShifts.js";
 import { editShift } from "./Controller/StaffAttendenceController/StaffShiftsController/editShift.js";
 import { deleteShift } from "./Controller/StaffAttendenceController/StaffShiftsController/deleteShift.js";
 import { viewShiftById } from "./Controller/StaffAttendenceController/StaffShiftsController/viewShiftById.js";
+import { viewAllShifts } from "./Controller/StaffAttendenceController/StaffShiftsController/viewAllShifts.js";
 
 import { viewAttendenceSummary } from "./Controller/StaffAttendenceController/AttendenceSummary/viewAttendenceSummary.js";
 import { monthlyReport } from "./Controller/StaffAttendenceController/AttendenceSummary/monthlyReport.js";
@@ -66,6 +70,15 @@ import { deleteSchedule } from "./Controller/ScheduleController/deleteSchedule.j
 import { attendenceById } from "./Controller/StaffAttendenceController/AttendenceSummary/attendanceById.js";
 import { updatePunch } from "./Controller/StaffAttendenceController/AttendenceSummary/updatePunch.js";
 import { getAbsentStaffController } from "./Controller/StaffAttendenceController/AttendenceSummary/getAbsentStaff.js";
+import { updateScheduleController } from "./Controller/ScheduleController/updateSchedule.js";
+import { allotShift } from "./Controller/StaffAttendenceController/ShiftAllotment/allotShift.js";
+
+import { createDevice } from "./Controller/DeviceController/createDevice.js";
+import { getAllDevices } from "./Controller/DeviceController/getAllDevices.js";
+import { deleteDevice } from "./Controller/DeviceController/deleteDevice.js";
+import { editDevice } from "./Controller/DeviceController/editDevice.js";
+import { getDeviceById } from "./Controller/DeviceController/getDeviceById.js";
+import { getAllSchedule } from "./Controller/ScheduleController/getAllSchedule.js";
 
 export const setupRoutes = (hrModels: HRModels, uploadPath: string): Router => {
     const router = express.Router();
@@ -113,7 +126,14 @@ export const setupRoutes = (hrModels: HRModels, uploadPath: string): Router => {
     router.post("/staff_attendence", injectModels(markPunches));
     router.get("/staff_attendence/:id", validate(paginationQuerySchema), injectModels(getPunchingDetails));
 
+    //Shift Allotment
+
+    router.get("/shift_allotment/:id", validate(paginationQuerySchema), injectModels(viewAllotedShifts));
+    router.get("/shift_allotment/view/:id", injectModels(viewShiftByIdController));
+    router.put("/shift_allotment/update/:id", injectModels(allotShift));
+
     //Staff Shifts
+    router.get("/all_staff_shifts/:id", injectModels(viewAllShifts));
     router.post("/staff_shifts", validate(shiftBodySchema), injectModels(createShift));
     router.get("/staff_shifts/:id", validate(paginationQuerySchema), injectModels(viewShifts));
     router.get("/staff_shift/:id", validate(shiftIdSchema, 'params'), injectModels(viewShiftById));
@@ -139,11 +159,19 @@ export const setupRoutes = (hrModels: HRModels, uploadPath: string): Router => {
     // router.get("/user/:companyId", validate(paginationQuerySchema), injectModels(getStaffByStatus));
     router.post("/departments", validate(departmentBodySchema), injectModels(createDepartment));
 
+    //Devices
+    router.post("/device", injectModels(createDevice));
+    router.get("/devices/:companyId", validate(paginationQuerySchema), injectModels(getAllDevices));
+    router.get("/device/:id", injectModels(getDeviceById));
+    router.put("/device/:id", injectModels(editDevice));
+    router.delete("/device/:id", injectModels(deleteDevice));
 
     router.post("/schedule", injectModels(createOrUpdateSchedule));
-    router.get("/schedules/:id", injectModels(getSchedule));
+    router.get("/all_schedules/:id", injectModels(getAllSchedule));
+    router.get("/schedules/:id", validate(paginationQuerySchema), injectModels(getSchedule));
     router.get("/schedule/:id", injectModels(getScheduleById));
     router.delete("/schedule/:id", injectModels(deleteSchedule));
+    router.put("/schedule/:id", injectModels(updateScheduleController));
     // router.put("/departments/:id", validate(departmentIdSchema, 'params'), validate(updateDepartmentSchema), injectModels(updateDepartment));
     // router.delete("/departments/:id", validate(departmentIdSchema, 'params'), injectModels(deleteDepartment));
 

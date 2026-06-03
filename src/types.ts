@@ -16,4 +16,5 @@ export interface HRModels extends UserModels {
     Department: ModelStatic<Model<any, any>>;
     CronLog: ModelStatic<Model<any, any>>;
     Schedule: ModelStatic<Model<any, any>>;
+    Device: ModelStatic<Model<any, any>>;
 }
