@@ -4,7 +4,7 @@ import * as shiftService from "../../../Service/StaffAttendenceService/ShiftAllo
 export const allotShift = async (req: Request, res: Response, hrModels: HRModels) => {
     try {
 
-        const { scheduleId, staffId, shiftId } = req.body;
+        const { scheduleId, staffId, shiftId, isFlexible } = req.body;
 
         const companyId = Number(req.params.id);
 
@@ -12,6 +12,7 @@ export const allotShift = async (req: Request, res: Response, hrModels: HRModels
             staffId,
             companyId,
             shiftId,
+            isFlexible,
             scheduleId,
             hrModels.Staff,
             hrModels.CompanyUserRelation

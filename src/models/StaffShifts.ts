@@ -17,6 +17,11 @@ export const defineStaffShift = (sequelize) => {
             allowNull: false,
             field: "shift_name"
         },
+        shiftColor: {
+            type: DataTypes.STRING,
+            allowNull: true,
+            field: "shift_color"
+        },
         shiftStart: {
             type: DataTypes.TIME,
             allowNull: false,

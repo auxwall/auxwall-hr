@@ -10,9 +10,10 @@ export const shiftBodySchema = Joi.object({
     shiftEnd: Joi.string().pattern(timeRegex).required().messages({
         'string.pattern.base': 'Shift end time must be in HH:mm or HH:mm:ss format'
     }),
-    breakMinutes: Joi.number().integer().positive().optional(),
-    lateGraceMinutes: Joi.number().integer().positive().optional(),
-    overtimeMinutes: Joi.number().integer().positive().optional(),
+    shiftColor: Joi.string().optional().allow(null).allow(''),
+    breakMinutes: Joi.number().integer().positive().optional().allow(null),
+    lateGraceMinutes: Joi.number().integer().positive().optional().allow(null),
+    overtimeMinutes: Joi.number().integer().positive().optional().allow(null),
     companyId: Joi.number().integer().positive().optional().allow(null),
     departmentId: Joi.number().integer().positive().optional().allow(null)
 })
@@ -26,9 +27,10 @@ export const updateShiftSchema = Joi.object({
     shiftEnd: Joi.string().pattern(timeRegex).allow(null).allow('').optional().messages({
         'string.pattern.base': 'Shift end time must be in HH:mm or HH:mm:ss format'
     }),
-    breakMinutes: Joi.number().integer().positive().optional(),
-    lateGraceMinutes: Joi.number().integer().positive().optional(),
-    overtimeMinutes: Joi.number().integer().positive().optional(),
+    shiftColor: Joi.string().optional().allow(null).allow(''),
+    breakMinutes: Joi.number().integer().positive().optional().allow(null),
+    lateGraceMinutes: Joi.number().integer().positive().optional().allow(null),
+    overtimeMinutes: Joi.number().integer().positive().optional().allow(null),
     companyId: Joi.number().integer().positive().optional().allow(null),
     departmentId: Joi.number().integer().positive().optional().allow(null)
 })

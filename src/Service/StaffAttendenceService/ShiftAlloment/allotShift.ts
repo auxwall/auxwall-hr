@@ -4,6 +4,7 @@ export const updateStaffShiftAllotment = async (
     staffId,
     companyId,
     shiftId,
+    isFlexible,
     scheduleId,
     Staff,
     CompanyUserRelation
@@ -34,7 +35,8 @@ export const updateStaffShiftAllotment = async (
     const [updatedRows] = await Staff.update(
         {
             shiftId,
-            scheduleId
+            scheduleId,
+            isFlexible
         },
         {
             where: {
@@ -61,7 +63,8 @@ export const updateStaffShiftAllotment = async (
             "fullName",
             "shiftId",
             "scheduleId",
-            "departmentId"
+            "departmentId",
+            "isFlexible"
         ]
     });
 

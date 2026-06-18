@@ -450,7 +450,8 @@ export const viewShifts = async (
             "shiftName",
             "shiftStart",
             "shiftEnd",
-            "departmentId"
+            "departmentId",
+            "shiftColor"
         ],
         raw: true
     });
@@ -465,6 +466,7 @@ export const viewShifts = async (
         shiftMap.set(shift.id, {
             shiftId: shift.id,
             shiftName: shift.shiftName,
+            shiftColor: shift.shiftColor,
             shiftStart: shift.shiftStart,
             shiftEnd: shift.shiftEnd,
             departmentId: shift.departmentId
@@ -486,7 +488,8 @@ export const viewShifts = async (
             "fullName",
             "shiftId",
             "scheduleId",
-            "departmentId"
+            "departmentId",
+            "isFlexible"
         ],
 
         include: [
@@ -500,6 +503,7 @@ export const viewShifts = async (
                     "shiftName",
                     "shiftStart",
                     "shiftEnd",
+                    "shiftColor",
                     "departmentId"
                 ],
 

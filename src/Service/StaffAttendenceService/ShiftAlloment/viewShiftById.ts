@@ -67,7 +67,8 @@ export const viewShiftById = async (
             "fullName",
             "shiftId",
             "scheduleId",
-            "departmentId"
+            "departmentId",
+            "isFlexible"
         ],
 
         include: [
