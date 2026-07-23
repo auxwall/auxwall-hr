@@ -812,6 +812,404 @@
 
 
 
+// import { Op } from "sequelize";
+// import moment from "moment";
+// import { HRModels } from "../types.js";
+
+// export const updateAttendanceSummary = async (
+//     punchingRecord: any,
+//     hrModels: HRModels
+// ) => {
+
+//     const {
+//         Staff,
+//         Schedule,
+//         StaffShift,
+//         Punching,
+//         AttendenceSummary
+//     } = hrModels;
+
+//     console.log("🟢 updateAttendanceSummary started");
+//     console.log(punchingRecord);
+
+//     let record;
+
+//     if (Array.isArray(punchingRecord)) {
+//         if (punchingRecord.length === 0) return;
+
+//         record =
+//             punchingRecord[0].dataValues ||
+//             punchingRecord[0];
+//     } else {
+//         record =
+//             punchingRecord.dataValues ||
+//             punchingRecord;
+//     }
+
+//     const { staffId, eventDate } = record;
+
+//     const interval = record.interval || 5;
+
+//     if (!staffId || !eventDate) {
+//         console.log("⛔ Missing staffId / eventDate", record);
+//         return;
+//     }
+
+//     let isUnauthorized = false;
+
+//     /* =========================
+//        1️⃣ STAFF
+//     ========================= */
+
+//     const staff: any = await Staff.findOne({
+//         where: { id: staffId },
+//         attributes: ["fullName", "shiftId", "scheduleId", "isFlexible"],
+//         raw: true
+//     });
+
+//     const isFlexible = staff?.isFlexible;
+
+//     /* =========================
+//        SHIFT DEFAULTS
+//     ========================= */
+
+//     const getMinutes = (time: string) => {
+//         const [h, m] = time.split(":").map(Number);
+//         return h * 60 + m;
+//     };
+
+//     let shiftStart = "09:00";
+//     let shiftEnd = "18:00";
+//     let lateGraceMinutes = 0;
+//     let overtimeLimitMinutes = 360;
+//     let isNightShift = false;
+
+//     const baseDate = moment(eventDate).format("YYYY-MM-DD");
+//     let targetDate = baseDate;
+
+//     const currentDate = moment(eventDate);
+//     const prevDate = currentDate.clone().subtract(1, "day");
+
+//     /* =========================
+//        2️⃣ SCHEDULE
+//     ========================= */
+
+//     const schedule: any = await Schedule.findOne({
+//         where: { id: staff.scheduleId },
+//         raw: true
+//     });
+
+//     let shiftStartDT;
+//     let shiftEndDT;
+
+//     if (schedule?.data) {
+
+//         let staffShiftId = null;
+//         let shiftDate = currentDate.clone();
+
+//         let dayKey = currentDate.format("ddd");
+//         staffShiftId = schedule.data[dayKey] ?? null;
+
+//         if (!staffShiftId) {
+//             dayKey = prevDate.format("ddd");
+//             staffShiftId = schedule.data[dayKey] ?? null;
+
+//             if (staffShiftId) shiftDate = prevDate.clone();
+//         }
+
+//         if (staffShiftId) {
+//             const shift: any = await StaffShift.findByPk(staffShiftId, { raw: true });
+
+//             if (shift && !isFlexible) {
+
+//                 shiftStart = shift.shiftStart;
+//                 shiftEnd = shift.shiftEnd;
+//                 lateGraceMinutes = shift.lateGraceMinutes || 0;
+
+//                 overtimeLimitMinutes =
+//                     shift.overtimeMinutes ?? 360;
+
+//                 const startM = getMinutes(shiftStart);
+//                 const endM = getMinutes(shiftEnd);
+//                 isNightShift = endM < startM;
+
+//                 targetDate = shiftDate.format("YYYY-MM-DD");
+//             }
+//         }
+//     }
+
+//     /* =========================
+//        3️⃣ SHIFT WINDOW (FIXED)
+//     ========================= */
+
+//     if (!isFlexible) {
+
+//         shiftStartDT = moment(`${targetDate} ${shiftStart}`);
+//         shiftEndDT = moment(`${targetDate} ${shiftEnd}`);
+
+//         if (isNightShift || shiftEndDT.isBefore(shiftStartDT)) {
+//             shiftEndDT.add(1, "day");
+//         }
+
+//     } else {
+//         // ✅ SAFE FLEXIBLE WINDOW
+//         shiftStartDT = moment(`${targetDate} 00:00`);
+//         shiftEndDT = moment(`${targetDate} 23:59`);
+//     }
+
+//     const overtimeEndDT = shiftEndDT
+//         .clone()
+//         .add(overtimeLimitMinutes, "minutes");
+
+//     const shiftCompleted = moment().isAfter(overtimeEndDT);
+
+//     /* =========================
+//        4️⃣ PUNCHES
+//     ========================= */
+
+//     const startOfRange = shiftStartDT.clone().subtract(12, "hours").toDate();
+//     const endOfRange = overtimeEndDT.toDate();
+
+//     // const punches: any[] = await Punching.findAll({
+//     //     where: {
+//     //         staffId,
+//     //         eventDate: { [Op.between]: [startOfRange, endOfRange] }
+//     //     },
+//     //     order: [["eventDate", "ASC"]],
+//     //     raw: true
+//     // });
+
+//     const rawPunches: any[] = await Punching.findAll({
+//         where: {
+//             staffId,
+//             eventDate: { [Op.between]: [startOfRange, endOfRange] }
+//         },
+//         order: [["eventDate", "ASC"]],
+//         raw: true
+//     });
+
+//     const punches = [];
+
+//     for (const punch of rawPunches) {
+
+//         if (punches.length === 0) {
+//             punches.push(punch);
+//             continue;
+//         }
+
+//         const previousPunch = punches[punches.length - 1];
+
+//         const diffMinutes = moment(punch.eventDate).diff(
+//             moment(previousPunch.eventDate),
+//             "minutes"
+//         );
+
+
+//         if (diffMinutes < interval) {
+//             console.log(
+//                 `⚠️ Ignored duplicate punch at ${moment(punch.eventDate).format("HH:mm:ss")}`
+//             );
+//             continue;
+//         }
+
+//         punches.push(punch);
+//     }
+//     if (!punches.length) {
+//         console.log("No punches found");
+//         return;
+//     }
+
+//     punches.forEach((p, i) => {
+//         p.punchingType = i % 2 === 0 ? "In" : "Out";
+//     });
+
+//     const isLastPunchIn = punches.length % 2 !== 0;
+
+//     let lastOut = punches[punches.length - 1];
+//     let lastOutDT = moment(lastOut.eventDate);
+
+//     const firstIn =
+//         punches.find(p =>
+//             moment(p.eventDate).isSameOrAfter(shiftStartDT)
+//         ) || punches[0];
+
+//     /* =========================
+//        5️⃣ LIVE / UNAUTHORIZED
+//     ========================= */
+
+//     if (isLastPunchIn) {
+//         if (!shiftCompleted) {
+//             console.log("Employee LIVE");
+//         } else {
+//             isUnauthorized = true;
+//         }
+//     }
+
+//     /* =========================
+//        6️⃣ WORK TIME
+//     ========================= */
+
+//     let workedMinutes = 0;
+//     let breakMinutes = 0;
+
+//     for (let i = 0; i < punches.length; i++) {
+
+//         const current = punches[i];
+//         const next = punches[i + 1];
+
+//         const currentDT = moment(current.eventDate);
+
+//         let endDT;
+
+//         if (next) {
+//             endDT = moment(next.eventDate);
+//         } else if (isLastPunchIn) {
+//             endDT = shiftCompleted ? lastOutDT : moment();
+//         } else {
+//             continue;
+//         }
+
+//         const diff = endDT.diff(currentDT, "minutes");
+
+//         if (current.punchingType === "In") {
+//             workedMinutes += diff;
+//         } else {
+//             breakMinutes += diff;
+//         }
+//     }
+
+//     /* =========================
+//        7️⃣ STATUS LOGIC
+//     ========================= */
+
+//     // let status = "Absent";
+//     // let lateMinutes = 0;
+//     // let overtimeMinutes = 0;
+
+//     // const firstInDT = moment(firstIn.eventDate);
+//     // const lateThresholdDT = shiftStartDT.clone().add(lateGraceMinutes, "minutes");
+
+//     // if (firstInDT.isAfter(lateThresholdDT)) {
+//     //     lateMinutes = firstInDT.diff(lateThresholdDT, "minutes");
+//     // }
+//     let status = "Absent";
+//     let lateMinutes = 0;
+//     let overtimeMinutes = 0;
+
+//     const firstInDT = moment(firstIn.eventDate);
+
+//     /*
+//         Flexible employees should never
+//         have late calculation.
+//     */
+//     if (!isFlexible) {
+
+//         const lateThresholdDT =
+//             shiftStartDT.clone().add(
+//                 lateGraceMinutes,
+//                 "minutes"
+//             );
+
+//         if (firstInDT.isAfter(lateThresholdDT)) {
+
+//             lateMinutes = firstInDT.diff(
+//                 lateThresholdDT,
+//                 "minutes"
+//             );
+//         }
+//     }
+
+//     if (isFlexible) {
+
+//         const requiredMinutes = 8 * 60;
+
+//         const extra = workedMinutes - requiredMinutes;
+
+//         if (extra > 0) {
+//             overtimeMinutes = Math.min(extra, overtimeLimitMinutes);
+//         }
+//         if (isUnauthorized) {
+//             status = "Unauthorized";
+//         }
+//         else if (workedMinutes === 0) {
+//             status = "Absent";
+//         }
+//         else if (workedMinutes < requiredMinutes) {
+//             status = "Half Day";
+//         } else {
+//             status = "Present";
+//         }
+
+//     } else {
+
+//         const shiftDurationMinutes =
+//             shiftEndDT.diff(shiftStartDT, "minutes");
+
+//         const halfDayMinutes = shiftDurationMinutes / 2;
+
+//         const extraWorkedMinutes =
+//             workedMinutes - shiftDurationMinutes;
+
+//         if (extraWorkedMinutes > 0) {
+//             overtimeMinutes = Math.min(extraWorkedMinutes, overtimeLimitMinutes);
+//         }
+
+//         if (isUnauthorized) {
+//             status = "Unauthorized";
+//         } else if (isLastPunchIn && !shiftCompleted) {
+//             status = "Live";
+//         } else if (workedMinutes < halfDayMinutes) {
+//             status = "Half Day";
+//         } else if (lateMinutes > 0) {
+//             status = "Late";
+//         } else {
+//             status = "Present";
+//         }
+//     }
+
+//     console.log("✅ Summary data:", {
+//         staffId,
+//         staffName: staff.fullName,
+//         attendenceDate: targetDate,
+//         shiftStart,
+//         shiftEnd,
+//         first_in: moment(firstIn.eventDate).format("HH:mm:ss"),
+//         last_out: moment(lastOutDT).format("HH:mm:ss"),
+//         workedMinutes,
+//         breakMinutes,
+//         lateMinutes,
+//         overtimeMinutes,
+//         totalPunches: punches.length,
+//         status
+//     });
+
+//     /* =========================
+//        8️⃣ UPSERT
+//     ========================= */
+
+//     await AttendenceSummary.upsert(
+//         {
+//             staffId,
+//             staffName: staff.fullName,
+//             attendenceDate: targetDate,
+//             shiftStart,
+//             shiftEnd,
+//             first_in: moment(firstIn.eventDate).format("HH:mm:ss"),
+//             last_out: moment(lastOutDT).format("HH:mm:ss"),
+//             workedMinutes,
+//             breakMinutes,
+//             lateMinutes,
+//             overtimeMinutes,
+//             totalPunches: punches.length,
+//             status
+//         },
+//         {
+//             conflictFields: ["staff_id", "attendence_date"]
+//         }
+//     );
+// };
+
+
 import { Op } from "sequelize";
 import moment from "moment";
 import { HRModels } from "../types.js";
@@ -847,6 +1245,8 @@ export const updateAttendanceSummary = async (
     }
 
     const { staffId, eventDate } = record;
+
+    const interval = record.interval || 5;
 
     if (!staffId || !eventDate) {
         console.log("⛔ Missing staffId / eventDate", record);
@@ -968,7 +1368,16 @@ export const updateAttendanceSummary = async (
     const startOfRange = shiftStartDT.clone().subtract(12, "hours").toDate();
     const endOfRange = overtimeEndDT.toDate();
 
-    const punches: any[] = await Punching.findAll({
+    // const punches: any[] = await Punching.findAll({
+    //     where: {
+    //         staffId,
+    //         eventDate: { [Op.between]: [startOfRange, endOfRange] }
+    //     },
+    //     order: [["eventDate", "ASC"]],
+    //     raw: true
+    // });
+
+    const rawPunches: any[] = await Punching.findAll({
         where: {
             staffId,
             eventDate: { [Op.between]: [startOfRange, endOfRange] }
@@ -977,6 +1386,32 @@ export const updateAttendanceSummary = async (
         raw: true
     });
 
+    const punches = [];
+
+    for (const punch of rawPunches) {
+
+        if (punches.length === 0) {
+            punches.push(punch);
+            continue;
+        }
+
+        const previousPunch = punches[punches.length - 1];
+
+        const diffMinutes = moment(punch.eventDate).diff(
+            moment(previousPunch.eventDate),
+            "minutes"
+        );
+
+
+        if (diffMinutes < interval) {
+            console.log(
+                `⚠️ Ignored duplicate punch at ${moment(punch.eventDate).format("HH:mm:ss")}`
+            );
+            continue;
+        }
+
+        punches.push(punch);
+    }
     if (!punches.length) {
         console.log("No punches found");
         return;

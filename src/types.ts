@@ -17,4 +17,7 @@ export interface HRModels extends UserModels {
     CronLog: ModelStatic<Model<any, any>>;
     Schedule: ModelStatic<Model<any, any>>;
     Device: ModelStatic<Model<any, any>>;
+    ZKDevice: ModelStatic<Model<any, any>>;
+    ZKCommand: ModelStatic<Model<any, any>>;
+    ZKBiometric: ModelStatic<Model<any, any>>;
 }

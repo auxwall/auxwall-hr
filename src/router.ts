@@ -80,6 +80,11 @@ import { editDevice } from "./Controller/DeviceController/editDevice.js";
 import { getDeviceById } from "./Controller/DeviceController/getDeviceById.js";
 import { getAllSchedule } from "./Controller/ScheduleController/getAllSchedule.js";
 
+import { registerFace } from "./Controller/ZKController/registerFace.js";
+import { getZkCommands } from "./Controller/ZKController/getZkCommands.js";
+import { receiveBioData } from "./Controller/ZKController/receiveBioData.js";
+import { registerDevice } from "./Controller/ZKController/registerDevice.js";
+
 export const setupRoutes = (hrModels: HRModels, uploadPath: string): Router => {
     const router = express.Router();
     const upload = createUploadMiddleware(uploadPath);
@@ -174,6 +179,11 @@ export const setupRoutes = (hrModels: HRModels, uploadPath: string): Router => {
     router.put("/schedule/:id", injectModels(updateScheduleController));
     // router.put("/departments/:id", validate(departmentIdSchema, 'params'), validate(updateDepartmentSchema), injectModels(updateDepartment));
     // router.delete("/departments/:id", validate(departmentIdSchema, 'params'), injectModels(deleteDepartment));
+
+    router.post("/zk/register-face", injectModels(registerFace));
+    router.get("/iclock/cdata", injectModels(getZkCommands));
+    router.post("/iclock/cdata", express.text({ type: "*/*" }), injectModels(receiveBioData));
+    router.post("/iclock/registry", injectModels(registerDevice));
 
     return router;
 }

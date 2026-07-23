@@ -155,6 +155,9 @@ export const initializeHRModule = async ({
             await hrModels.Department.sync({ alter: true });
             await hrModels.CronLog.sync({ alter: true });
             await hrModels.Schedule.sync({ alter: true });
+            await hrModels.ZKDevice.sync({ alter: true });
+            await hrModels.ZKCommand.sync({ alter: true });
+            await hrModels.ZKBiometric.sync({ alter: true });
 
             console.log("HR Module tables synced.");
         }

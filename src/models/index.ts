@@ -9,6 +9,9 @@ import { UserModels, HRModels } from "../types.js";
 import defineCronLog from "./cronLog.model.js";
 import { defineSchedule } from "./Schedule.js";
 import { defineDevice } from "./Devices.js";
+import { defineZKDeviceTable } from "./ZKDevice.js";
+import { defineZKCommandTable } from "./ZKCommand.js";
+import { defineZKBiometricTable } from "./ZKBiometric.js";
 
 export const initModels = (sequelize: Sequelize, userModels: UserModels): HRModels => {
     const { Staff, Company, Punching, CompanyUserRelation } = userModels;
@@ -23,6 +26,9 @@ export const initModels = (sequelize: Sequelize, userModels: UserModels): HRMode
     const CronLog = defineCronLog(sequelize);
     const Schedule = defineSchedule(sequelize);
     const Device = defineDevice(sequelize);
+    const ZKDevice = defineZKDeviceTable(sequelize);
+    const ZKCommand = defineZKCommandTable(sequelize);
+    const ZKBiometric = defineZKBiometricTable(sequelize);
 
     // 2. Setup Foreign Key Associations
 
@@ -91,5 +97,5 @@ export const initModels = (sequelize: Sequelize, userModels: UserModels): HRMode
     Company.hasMany(Department, { foreignKey: "companyId" });
     // Company.belongsToMany(Staff, { through: CompanyUserRelation, foreignKey: "companyId" })
 
-    return { Document, Category, Activity, Staff, CompanyUserRelation, Company, StaffShift, AttendenceSummary, Punching, Department, CronLog, Schedule, Device };
+    return { Document, Category, Activity, Staff, CompanyUserRelation, Company, StaffShift, AttendenceSummary, Punching, Department, CronLog, Schedule, Device, ZKDevice, ZKCommand, ZKBiometric };
 };
